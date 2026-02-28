@@ -23,6 +23,7 @@ class Enemigo_normal:
         self.fuente_tag = pygame.font.SysFont("Arial", 20, bold=True)
 
     def update(self, jugador):
+        
         # Calcular dirección hacia el jugador
         dx = jugador.rect.centerx - self.pos_x
         dy = jugador.rect.centery - self.pos_y
