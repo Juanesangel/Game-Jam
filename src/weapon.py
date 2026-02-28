@@ -35,7 +35,6 @@ class Weapon():
 
     def dibujar(self, pantalla):
         pantalla.blit(self.imagen, self.rect)
-        pygame.draw.rect(pantalla,constantes.COLOR_ARMA, self.rect,1)
 
     #DETECTAR EL MOVIMIENTO 
     #if.hace e comando pedido lanza la empanada and+= False.
@@ -43,25 +42,33 @@ class Weapon():
         #self.dispara= True
         #return bala
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self,image,x,y,angle):
-        pygame.sprite.Sprite.__init__(self)
-        self.imagen_original = image
-        self.angulo= angle
-        self.image=pygame.transform.rotate(self.imagen_original,self.angulo)
-        self.rect=self.image.get_rect()
-        self.rect.center=(x,y)
-        
-        self.delta_x=math.cos(math.radians(self.angulo))*constantes.VELOCIDAD_BALAS
-        self.delta_Y=-math.sin(math.radians(self.angulo))*constantes.VELOCIDAD_BALAS
+    def __init__(self, image, x, y, angle, damage=10):
+        super().__init__()
 
-        self.dispara= False
+        self.imagen_original = image
+        self.angulo = angle
+        self.image = pygame.transform.rotate(self.imagen_original, self.angulo)
+        self.rect = self.image.get_rect(center=(x, y))
+
+        self.damage = damage
+
+        self.velocidad = constantes.VELOCIDAD_BALAS
+
+        # Vector de movimiento
+        self.delta_x = math.cos(math.radians(self.angulo)) * self.velocidad
+        self.delta_y = -math.sin(math.radians(self.angulo)) * self.velocidad
         
     def update(self):
-        self.rect.x += self.delta_x
-        self.rect.y = self.delta_y+self.delta_y
-        
-        if self.rect.right <0 or self.rect.left > constantes.ANCHO_VENTANA or self.rect.bottom<0 or self.rect.top>constantes.ALTO_VENTANA:
+        self.rect = self.rect.move(self.delta_x, self.delta_y)
+
+        # Si sale de pantalla, se elimina
+        if (
+            self.rect.right < 0
+            or self.rect.left > constantes.ANCHO_VENTANA
+            or self.rect.bottom < 0
+            or self.rect.top > constantes.ALTO_VENTANA
+        ):
             self.kill()
-    def draw(self,screen):
-        screen.blit(self.image, (self.rect.centerx, self.rect.centerx))
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
         

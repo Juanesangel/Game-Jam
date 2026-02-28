@@ -1,6 +1,7 @@
 import pygame
 import constantes
 from personaje import Personaje
+import personaje
 from weapon import Weapon
 from cocina import Cocina
 from Enemigos.enemigo_normal import Enemigo_normal
@@ -128,6 +129,23 @@ pistola = Weapon(imagen_pistola,imagen_balas)
 grupos_balas = pygame.sprite.Group()
 #cocina
 cocina = Personaje(210, 120, animaciones_cocina)
+#Barra de vida 
+def dibujar_barra_vida(pantalla, vida_actual, vida_max, x=20, y=20):
+
+    ancho_barra = 200
+    alto_barra = 20
+
+    porcentaje = vida_actual / vida_max
+    ancho_actual = ancho_barra * porcentaje
+
+    # Fondo gris
+    pygame.draw.rect(pantalla, (50, 50, 50), (x, y, ancho_barra, alto_barra))
+
+    # Vida verde
+    pygame.draw.rect(pantalla, (0, 255, 0), (x, y, ancho_actual, alto_barra))
+
+    # Borde
+    pygame.draw.rect(pantalla, (255, 255, 255), (x, y, ancho_barra, alto_barra), 2)
 # -------- GAME LOOP --------
 
 run = True
@@ -167,7 +185,13 @@ while run:
         bala.dibujar(screen)
     for enemigo in enemigos:
         enemigo.dibujar(screen)
+            # Colisión enemigo vs jugador
+        if enemigo.hitbox.colliderect(jugador.hitbox):
+            if enemigo.hitbox.colliderect(jugador.hitbox):
+                jugador.recibir_dano(enemigo.dano)
     jugador.dibujar(screen)
+    
+    dibujar_barra_vida(screen, jugador.vida, jugador.vida_max)
     pistola.dibujar(screen)
     pygame.display.update()
 

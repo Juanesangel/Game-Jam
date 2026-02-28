@@ -3,15 +3,29 @@ import math
 
 class Enemigo_normal:
     def __init__(self, x, y, animaciones, velocidad=2):
+
         self.animaciones = animaciones
         self.frame = 0
 
         self.imagen_original = self.animaciones[self.frame]
         self.imagen = self.imagen_original
 
+        #  Primero creamos el rect
         self.rect = self.imagen.get_rect(center=(x, y))
+
+        # Ahora sí podemos crear la hitbox
+        self.hitbox = pygame.Rect(
+            0,
+            0,
+            self.rect.width * 0.6,
+            self.rect.height * 0.6
+        )
+        self.hitbox.center = self.rect.center
+
+        self.dano = 10
         self.velocidad = velocidad
         self.angulo = 0
+    
 
     def update(self, jugador):
 
@@ -44,7 +58,8 @@ class Enemigo_normal:
         self.imagen = pygame.transform.rotate(self.imagen_original, angulo_ajustado)
         # Mantener el centro
         self.rect = self.imagen.get_rect(center=self.rect.center)
-
+        
+        self.hitbox.center = self.rect.center
     def dibujar(self, pantalla):
         pantalla.blit(self.imagen, self.rect)
     import math
@@ -64,3 +79,4 @@ class Enemigo_normal:
 
         self.imagen = pygame.transform.rotate(self.imagen_original, angulo)
         self.rect = self.imagen.get_rect(center=centro)
+        self.hitbox.center = self.rect.center
