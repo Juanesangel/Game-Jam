@@ -55,11 +55,40 @@ class EscenaBase:
     def dibujar(self, surface): pass
 
 class MenuInicio(EscenaBase):
+
+    def _apagar_musica_menu(self, fade_ms=400):
+        if pygame.mixer.get_init() and getattr(self, "_musica_activa", False):
+            try:
+                if fade_ms and fade_ms > 0:
+                    pygame.mixer.music.fadeout(fade_ms)
+                else:
+                    pygame.mixer.music.stop()
+            except Exception:
+                pass
+            self._musica_activa = False
+
     def __init__(self, cambiar_escena_cb):
         super().__init__(cambiar_escena_cb)
         info = pygame.display.Info()
         self.ancho, self.alto = info.current_w, info.current_h
         
+
+
+
+    
+        self._musica_activa = False
+        try:
+                if not pygame.mixer.get_init():
+                        pygame.mixer.init()
+
+                pygame.mixer.music.load("assets/Assets_Menu_inicio/Audio_menu_inicio.mp3")
+                pygame.mixer.music.set_volume(0.5)  # Ajusta a tu gusto
+                pygame.mixer.music.play(-1, fade_ms=500)  # Loop + Fade-In
+                self._musica_activa = True
+        except Exception as e:
+                    print(f"[ADVERTENCIA] No se pudo reproducir música del menú: {e}")
+
+
         # Carga de Imágenes
         try:
             # Cargamos la imagen una sola vez para reutilizarla en los botones
@@ -84,13 +113,18 @@ class MenuInicio(EscenaBase):
         self.index = 0
 
     def manejar_eventos(self, eventos):
+        
         for e in eventos:
+            if e.type == pygame.QUIT:
+                self._apagar_musica_menu(fade_ms=300)
+                pygame.quit()
+                sys.exit()
             if e.type == pygame.KEYDOWN:
-                if e.key in (pygame.K_DOWN, pygame.K_s): 
+                if e.key in (pygame.K_DOWN, pygame.K_s):
                     self.index = (self.index + 1) % len(self.botones)
-                if e.key in (pygame.K_UP, pygame.K_w): 
+                if e.key in (pygame.K_UP, pygame.K_w):
                     self.index = (self.index - 1) % len(self.botones)
-                if e.key in (pygame.K_RETURN, pygame.K_SPACE): 
+                if e.key in (pygame.K_RETURN, pygame.K_SPACE):
                     self.botones[self.index].on_click()
 
     def actualizar(self, dt):
