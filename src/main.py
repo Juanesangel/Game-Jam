@@ -2,7 +2,11 @@ import pygame
 import constantes
 from personaje import Personaje
 from weapon import Weapon
+from cocina import Cocina
+from Enemigos.enemigo_normal import Enemigo_normal
 import os
+import random
+
 
 pygame.init()
 pygame.display.set_caption("NOMBRE JUEGO")
@@ -50,13 +54,80 @@ img_balas = os.path.join(BASE_DIR,"..","assets","Images","weapons","Empanada.png
 imagen_balas = pygame.image.load(img_balas).convert_alpha()
 imagen_balas = escalar_img(imagen_pistola, constantes.SCALA_ARMA)
 
+# ENEMIGO
+enemigos = []
+animaciones_enemigo=[]
+spawn_cooldown = 2000  # milisegundos (2 segundos)
+ultimo_spawn = pygame.time.get_ticks()
+for i in range(7):
+    img_enemigo_path = os.path.join(
+        BASE_DIR,
+        "..",
+        "assets",
+        "Images",
+        "enemigos",
+        "enemigos_normales",
+        f"cliente-{i}.png"
+    )
+
+    imagen_enemigo = pygame.image.load(img_enemigo_path).convert_alpha()
+    imagen_enemigo = escalar_img(imagen_enemigo, constantes.SCALA_ENEMIGO)
+    animaciones_enemigo.append(imagen_enemigo)
+enemigo = Enemigo_normal(400, 300, animaciones_enemigo, velocidad=2)
+
+def spawn_enemigo(jugador):
+    import random
+    lado = random.choice(["top", "bottom", "left", "right"])
+
+    if lado == "top":
+        x = random.randint(0, constantes.ANCHO_VENTANA)
+        y = -50
+    elif lado == "bottom":
+        x = random.randint(0, constantes.ANCHO_VENTANA)
+        y = constantes.ALTO_VENTANA + 50
+    elif lado == "left":
+        x = -50
+        y = random.randint(0, constantes.ALTO_VENTANA)
+    else:
+        x = constantes.ANCHO_VENTANA + 50
+        y = random.randint(0, constantes.ALTO_VENTANA)
+
+    enemigo = Enemigo_normal(x, y, animaciones_enemigo, velocidad=2)
+
+    enemigo.orientar_hacia(jugador)
+
+    return enemigo
+
+#cocina
+animaciones_cocina = []
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+for i in range(9):
+    img_path = os.path.join(
+        BASE_DIR,
+        "..",
+        "assets",
+        "Images",
+        "characters",
+        "Cocina",
+        f"Cocina-{i}.png"
+    )
+
+    img = pygame.image.load(img_path).convert_alpha()
+    img = escalar_img(img, constantes.SCALA_COCINA)
+
+    animaciones_cocina.append(img)
+
+
 # -------- CREACIÓN DE OBJETOS --------
 #Juagdor
-jugador = Personaje(50, 50, animaciones)
+jugador = Personaje(300, 250, animaciones) # Ubicacion principal personaje
 #Arma
 pistola = Weapon(imagen_pistola,imagen_balas)
 grupos_balas = pygame.sprite.Group()
-
+#cocina
+cocina = Personaje(210, 120, animaciones_cocina)
 # -------- GAME LOOP --------
 
 run = True
@@ -71,33 +142,33 @@ while run:
 
     # Movimiento con teclado
     keys = pygame.key.get_pressed()
-    dx = 0
-    dy = 0
+    dx = 50
+    dy = 50
     velocidad = 5
+    #Spawn enemigos
+    tiempo_actual = pygame.time.get_ticks()
 
-    if keys[pygame.K_a]:
-        dx = -velocidad
-    if keys[pygame.K_d]:
-        dx = velocidad
-    if keys[pygame.K_w]:
-        dy = -velocidad
-    if keys[pygame.K_s]:
-        dy = velocidad
+    if tiempo_actual - ultimo_spawn > spawn_cooldown:
+        enemigos.append(spawn_enemigo(jugador))
+        ultimo_spawn = tiempo_actual
 
-    jugador.movimiento(dx, dy)
     jugador.update()
+    for enemigo in enemigos:
+        enemigo.update(jugador)
     bala= pistola.update(jugador)
     if bala:
-      grupos_balas.add(bala)
+        grupos_balas.add(bala)
     for bala in grupos_balas:
-      bala.update()
+        bala.update()
     
     screen.fill((30, 30, 30))
+    cocina.dibujar(screen)
+    for bala in grupos_balas:
+        bala.dibujar(screen)
+    for enemigo in enemigos:
+        enemigo.dibujar(screen)
     jugador.dibujar(screen)
     pistola.dibujar(screen)
-    for bala in grupos_balas:
-      bala.dibujar(screen)
-
     pygame.display.update()
 
 pygame.quit()

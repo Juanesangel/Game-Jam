@@ -25,7 +25,7 @@ class Weapon():
         )
         # rotación
         # vector desde el centro hacia el "mango"
-        pivot_offset = pygame.math.Vector2(3, -30)
+        pivot_offset = pygame.math.Vector2(0.1, -39)
         # rotar ese vector
         rotated_offset = pivot_offset.rotate(-self.angulo)
         # nueva posición final

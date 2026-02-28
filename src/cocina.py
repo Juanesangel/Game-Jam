@@ -1,7 +1,7 @@
 import pygame
 import constantes
 
-class Personaje:
+class Cocina:
     def __init__(self, x, y, animaciones):
         self.animaciones = animaciones
         self.frame_index = 3
@@ -11,14 +11,6 @@ class Personaje:
         self.image = self.animaciones[self.frame_index]
         self.rect = self.image.get_rect(topleft=(x, y))
 
-    def movimiento(self, delta_x, delta_y):
-        self.rect.x += delta_x
-        self.rect.y += delta_y
-
-        if delta_x < 0:
-            self.flip = True
-        elif delta_x > 0:
-            self.flip = False
 
     def update(self):
         cooldown_animacion = 100
