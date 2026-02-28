@@ -85,7 +85,7 @@ class Personaje:
         
         if show_debug:
             pygame.draw.rect(pantalla, (255, 0, 0), self.hitbox, 2)
-#hola
+
     def actualizar_hitbox(self):
         self.hitbox.center = self.rect.center
 
