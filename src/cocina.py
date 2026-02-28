@@ -1,5 +1,4 @@
 import pygame
-import constantes
 
 class Cocina:
     def __init__(self, x, y, animaciones):
