@@ -2,7 +2,6 @@ import pygame
 import sys
 
 # Configuración inicial
-# ----------------------------
 pygame.init()
 info = pygame.display.Info()
 ANCHO, ALTO = info.current_w, info.current_h
@@ -26,7 +25,6 @@ FUENTE_UI = pygame.font.Font("assets/Assets_Menu_inicio/PressStart2P-Regular.ttf
 
 
 # Utilidades UI
-# ----------------------------
 class Boton:
     def __init__(self, texto, rect, color_base, color_hover, on_click, imagen_fondo=None):
 
@@ -77,7 +75,6 @@ class Boton:
 
     
 # Escenas
-# ----------------------------
 class EscenaBase:
     def __init__(self, cambiar_escena_cb):
         self.cambiar_escena = cambiar_escena_cb
@@ -99,10 +96,10 @@ class MenuInicio(EscenaBase):
             pygame.mixer.music.set_volume(0.5)
             pygame.mixer.music.play(-1)                 
         except pygame.error as e:
-            print(f"[ADVERTENCIA] No se pudo cargar o reproducir la música del menú: {e}")
+            print(f"No se pudo cargar o reproducir la música del menú: {e}")
 
 
-        # 1) Ocultar cursor y 2) bloquear eventos de mouse mientras estamos en el menú
+        # Ocultar cursor y bloquear eventos de mouse mientras estamos en el menú
         pygame.mouse.set_visible(False)
         pygame.event.set_blocked([pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEWHEEL])
 
@@ -136,6 +133,7 @@ class MenuInicio(EscenaBase):
             on_click=lambda: pygame.event.post(pygame.event.Event(pygame.QUIT)),
             imagen_fondo=self.img_boton_base
         )
+
  
         self.botones = [self.boton_jugar, self.boton_salir]
         self.index_foco = 0 
@@ -233,7 +231,6 @@ class Juego:
 
 
 # Entry point
-# ----------------------------
 if __name__ == "__main__":
     juego = Juego()
     juego.run()
