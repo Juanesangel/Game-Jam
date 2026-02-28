@@ -84,7 +84,7 @@ while run:
 
     jugador.movimiento(dx, dy)
     jugador.update()
-    
+    pistola.update(jugador)
     screen.fill((30, 30, 30))
     jugador.dibujar(screen)
     pistola.dibujar(screen)
