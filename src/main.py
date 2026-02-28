@@ -38,7 +38,7 @@ class EscenaJuego(EscenaBase):
         self.cocina = Cocina(wc.WIDTH//2, (wc.HEIGHT//2) + 160, self._cargar_animaciones_cocina())
         self.animaciones_enemigo = self._cargar_animaciones_enemigo()
         self.cook_minigame = c.Cook()
-        self.menu_powerup = SeleccionPowerUp(self.jugador) 
+        self.menu_powerup = SeleccionPowerUp(self.jugador, self.enemigos)
         self.enemigos = []
         self.puntuacion = 0
         self.ultimo_umbral_powerup = 0
@@ -86,12 +86,8 @@ class EscenaJuego(EscenaBase):
         return imgs
 
     def spawn_enemigo(self):
-<<<<<<<<< Temporary merge branch 1
-        mitad_y = wc.HEIGHT // 2
-        opciones = [(random.randint(0, wc.WIDTH), wc.HEIGHT + 50), (-50, random.randint(mitad_y, wc.HEIGHT)), (wc.WIDTH + 50, random.randint(mitad_y, wc.HEIGHT))]
-=========
         # Solo spawnear en la mitad inferior
-        mitad_y = (wc.HEIGHT // 2)-100
+        mitad_y = wc.HEIGHT // 2
         opciones = [
             (random.randint(0, wc.WIDTH), wc.HEIGHT + 50),
             (-50, random.randint(mitad_y, wc.HEIGHT)),
@@ -128,23 +124,57 @@ class EscenaJuego(EscenaBase):
         t = pygame.time.get_ticks()
         
         self.escenario.actualizar()
-        self.menu_powerup.actualizar()
+
+
+        # --- LÓGICA DE ELIMINACIÓN DE ENEMIGOS AL COMPLETAR COMIDA ---
+        if self.cook_minigame.entrega_lista:
+            comida_lista = self.cook_minigame.entrega_lista
+            enemigo_objetivo = None
+            distancia_minima = 999999
+
+            for en in self.enemigos:
+                if en.pedido == comida_lista:
+                    # Calcular distancia al jugador
+                    d = ((en.pos_x - self.jugador.rect.centerx)**2 + (en.pos_y - self.jugador.rect.centery)**2)**0.5
+                    if d < distancia_minima:
+                        distancia_minima = d
+                        enemigo_objetivo = en
+            
+            if enemigo_objetivo:
+                self.enemigos.remove(enemigo_objetivo)
+            
+            # Resetear la entrega para que no siga borrando en el siguiente frame
+            self.cook_minigame.entrega_lista = None
+        
         if t - self.ultimo_spawn > self.spawn_cooldown:
             self.spawn_enemigo()
             self.ultimo_spawn = t
+            
+
         if not self.cook_minigame.active:
             k = pygame.key.get_pressed()
             dx = k[pygame.K_d] - k[pygame.K_a]
             dy = k[pygame.K_s] - k[pygame.K_w]
             self.jugador.movimiento(dx, dy)
+            
+
         self.jugador.update()
         self.cocina.update()
-        for en in self.enemigos: en.update(self.jugador)
-        
-        if self.cook_minigame.puntos_pendientes > 0:
+
+        for en in self.enemigos:
+            en.update(self.jugador)
+
+        # SUMA DE PUNTOS
+        if self.cook_minigame.puntos_pendientes != 0:
             self.puntuacion += self.cook_minigame.puntos_pendientes
             self.puntuacion = max(0, self.puntuacion)
             self.cook_minigame.puntos_pendientes = 0
+            
+            if self.puntuacion >= 30 and not self.dificultad_maxima:
+                self.dificultad_maxima = True
+                self.mensaje_dificultad_timer = pygame.time.get_ticks() + 3000
+
+
             if self.puntuacion // 15 > self.ultimo_umbral_powerup:
                 self.ultimo_umbral_powerup = self.puntuacion // 15
                 self.menu_powerup.activar_menu()
