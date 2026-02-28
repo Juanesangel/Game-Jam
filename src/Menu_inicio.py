@@ -72,6 +72,12 @@ class MenuInicio(EscenaBase):
         pygame.mouse.set_visible(False)
         pygame.event.set_blocked([pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEWHEEL])
 
+        self.fondo = pygame.image.load("assets/Assets_Menu_inicio/Fondo_Menu_inicio.png").convert()
+        self.fondo = pygame.transform.scale(self.fondo, (ANCHO, ALTO))
+        
+        self.overlay = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
+        self.overlay.fill((0, 0, 0, 100)) 
+
         ancho_boton, alto_boton = 260, 60
         x = (ANCHO - ancho_boton) // 2
         y_base = ALTO // 2 - 40
@@ -113,7 +119,9 @@ class MenuInicio(EscenaBase):
             b.hover = (i == self.index_foco)
 
     def dibujar(self, surface):
-        surface.fill(GRIS)
+
+        surface.blit(self.fondo, (0, 0))
+        surface.blit(self.overlay, (0, 0))
 
         titulo = FUENTE_TITULO.render("Nombre...", True, BLANCO)
         titulo_rect = titulo.get_rect(center=(ANCHO // 2, ALTO // 2 - 140))
