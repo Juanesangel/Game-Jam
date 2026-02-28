@@ -11,10 +11,7 @@ class PowerUpVelocidad:
 
     def activar(self, personaje):
         self.personaje = personaje
-        # Guardamos la velocidad que tiene el personaje justo antes de este aumento
         self.velocidad_original = getattr(personaje, "velocidad", 5.0)
-        
-        # Aplicar aumento
         personaje.velocidad = self.velocidad_original + self.aumento_velocidad
         self.tiempo_inicio = pygame.time.get_ticks()
         self.activo = True
@@ -25,7 +22,6 @@ class PowerUpVelocidad:
 
         tiempo_actual = pygame.time.get_ticks()
         if tiempo_actual - self.tiempo_inicio >= self.duracion:
-            # Restaurar: restamos solo lo que este objeto aumentó
             self.personaje.velocidad -= self.aumento_velocidad
             self.activo = False
             self.personaje = None

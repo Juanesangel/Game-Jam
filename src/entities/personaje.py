@@ -39,7 +39,7 @@ class Personaje:
 
         # No pasar de la MITAD de la pantalla hacia ARRIBA
         # No salirse por el borde INFERIOR
-        limite_superior = wc.HEIGHT // 2
+        limite_superior = (wc.HEIGHT // 2)-100
         if nueva_y < limite_superior: 
             nueva_y = limite_superior
         elif nueva_y + self.rect.height > wc.HEIGHT: 
@@ -93,5 +93,26 @@ class Personaje:
         tiempo_actual = pygame.time.get_ticks()
         if not self.invulnerable:
             self.vida -= cantidad
+            self.vida = max(0, self.vida)
+
             self.invulnerable = True
             self.tiempo_invulnerable = tiempo_actual
+    
+    
+    
+    def dibujar_barra_vida(self, pantalla):
+        ancho_barra = 300
+        alto_barra = 25
+        x = 40
+        y = 90
+
+        # Fondo (rojo oscuro)
+        pygame.draw.rect(pantalla, (120, 0, 0), (x, y, ancho_barra, alto_barra))
+
+        # Vida actual (verde)
+        proporcion = self.vida / self.vida_max
+        ancho_vida = ancho_barra * proporcion
+        pygame.draw.rect(pantalla, (0, 200, 0), (x, y, ancho_vida, alto_barra))
+
+        # Borde blanco
+        pygame.draw.rect(pantalla, (255, 255, 255), (x, y, ancho_barra, alto_barra), 2)
