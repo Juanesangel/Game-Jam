@@ -9,6 +9,22 @@ from src.entities.cocina import Cocina
 from src.Enemigos.enemigo_normal import Enemigo_normal
 from src.Menu_inicio import EscenaBase, MenuInicio
 
+class Escenario:
+    def __init__(self, imagenes):
+        self.imagenes = imagenes
+        self.frame_index = 0
+        self.update_time = pygame.time.get_ticks()
+        self.anim_speed = 120  # Milisegundos entre frames
+
+    def actualizar(self):
+        if pygame.time.get_ticks() - self.update_time > self.anim_speed:
+            self.frame_index = (self.frame_index + 1) % len(self.imagenes)
+            self.update_time = pygame.time.get_ticks()
+
+    def dibujar(self, surface):
+        # Dibujamos el frame actual escalado a toda la ventana
+        surface.blit(self.imagenes[self.frame_index], (0, 0))
+
 class EscenaJuego(EscenaBase):
     def __init__(self, cambiar_escena_cb):
         super().__init__(cambiar_escena_cb)
@@ -19,7 +35,10 @@ class EscenaJuego(EscenaBase):
         self.dificultad_maxima = False
         self.timer_cartel_dificultad = 0
         
-        # Entidades
+        # --- NUEVO: Cargar Escenario ---
+        self.escenario = Escenario(self._cargar_assets_escenario())
+        
+        # --- Entidades ---
         self.jugador = personaje.Personaje(wc.WIDTH//2, wc.HEIGHT//2, self._cargar_animaciones_jugador())
         self.cocina = Cocina(wc.WIDTH//2, wc.HEIGHT//2 - 100, self._cargar_animaciones_cocina())
         
@@ -29,6 +48,19 @@ class EscenaJuego(EscenaBase):
         self.spawn_cooldown = 2000
         self.ultimo_spawn = 0
         self.fuente_ui = pygame.font.SysFont("Arial", 30, bold=True)
+
+    def _cargar_assets_escenario(self):
+        imgs = []
+        # Asumiendo que las imágenes en 'transmilenio' siguen un patrón numérico o similar
+        path_dir = os.path.join(self.BASE_DIR, "assets", "Images", "escenarios", "transmilenio")
+        # Listamos y ordenamos los archivos para que la animación tenga sentido
+        archivos = sorted([f for f in os.listdir(path_dir) if f.endswith('.png')])
+        
+        for nombre in archivos:
+            img = pygame.image.load(os.path.join(path_dir, nombre)).convert()
+            # Escalamos la imagen al tamaño total de la ventana configurada
+            imgs.append(pygame.transform.scale(img, (wc.WIDTH, wc.HEIGHT)))
+        return imgs
 
     def _cargar_animaciones_jugador(self):
         imgs = []
@@ -43,7 +75,7 @@ class EscenaJuego(EscenaBase):
         for i in range(9):
             path = os.path.join(self.BASE_DIR, "assets", "Images", "characters", "Cocina", f"Cocina-{i}.png")
             img = pygame.image.load(path).convert_alpha()
-            imgs.append(img) # Cocina.py se encarga de escalar
+            imgs.append(img)
         return imgs
 
     def _cargar_animaciones_enemigo(self):
@@ -78,6 +110,10 @@ class EscenaJuego(EscenaBase):
 
     def actualizar(self, dt):
         t = pygame.time.get_ticks()
+        
+        # Actualizar animación de fondo
+        self.escenario.actualizar()
+
         if t - self.ultimo_spawn > self.spawn_cooldown:
             self.spawn_enemigo()
             self.ultimo_spawn = t
@@ -112,19 +148,17 @@ class EscenaJuego(EscenaBase):
             self.cook_minigame.cease_execution(True)
 
     def dibujar(self, surface):
-        surface.fill((30, 30, 30))
+        # 1. Dibujar escenario (reemplaza surface.fill)
+        self.escenario.dibujar(surface)
         
-        # Cocina
+        # 2. Entidades
         self.cocina.dibujar(surface, self.show_debug)
-        
-        # Enemigos (Incluyen sus etiquetas)
         for en in self.enemigos:
             en.dibujar(surface, self.show_debug)
 
-        # Jugador
         self.jugador.dibujar(surface, self.show_debug)
         
-        # Interacción
+        # 3. UI y Feedback
         if self.jugador.hitbox.colliderect(self.cocina.hitbox) and not self.cook_minigame.active:
             hint = self.fuente_ui.render("[ESPACIO] Empanada | [F] Arepa", True, (0, 255, 200))
             surface.blit(hint, (wc.WIDTH//2 - hint.get_width()//2, wc.HEIGHT - 50))
@@ -132,11 +166,10 @@ class EscenaJuego(EscenaBase):
         if self.cook_minigame.active:
             self.cook_minigame.continue_execution(surface)
 
-        # UI
         p_txt = self.fuente_ui.render(f"PUNTOS: {self.puntuacion}", True, (255, 215, 0))
         surface.blit(p_txt, (20, 20))
 
-# --- JUEGO MOTOR (Al margen izquierdo para que el Launcher lo vea) ---
+# --- CLASE JUEGOMOTOR ---
 class JuegoMotor:
     def __init__(self):
         pygame.init()
