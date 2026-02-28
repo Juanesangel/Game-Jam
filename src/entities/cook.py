@@ -14,13 +14,13 @@ class Cook(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         
         self.active = False
-        self.success = False
         self.puntos_pendientes = 0
-        self.tipo_comida = "" # "Empanada" o "Arepa"
+        self.tipo_comida = "" 
+        self.entrega_lista = None  # <--- NUEVO: Almacena qué se terminó de cocinar
         
-        self.timer_duration = 5000  
+        self.timer_duration = 5000  # 5 segundos para completar
         self.start_time = 0
-        self.lock_timer = 0         
+        self.lock_until = 0 
         self.sequence = []
         self.current_step = 0
         self.shake_offset: list[float] = [0.0, 0.0]
@@ -31,14 +31,14 @@ class Cook(pygame.sprite.Sprite):
 
     def initiate_execution(self, modo, dificultad_max):
         ahora = pygame.time.get_ticks()
-        if ahora < self.lock_timer: return False
+        if ahora < self.lock_until: return False
         
         self.active = True
         self.puntos_pendientes = 0
+        self.entrega_lista = None # Resetear entrega al iniciar
         self.current_step = 0
         self.start_time = ahora
         
-        # Lógica de dificultad y modo
         if dificultad_max:
             self.current_pool = {**self.arrow_keys, **self.wasd_keys}
         else:
@@ -50,12 +50,16 @@ class Cook(pygame.sprite.Sprite):
 
     def cease_execution(self, apply_penalty=False):
         if not self.active: return
-        self.active = False
+        
         if not apply_penalty:
             self.puntos_pendientes = 1
+            self.entrega_lista = self.tipo_comida # Notificamos qué comida está lista
         else:
             self.puntos_pendientes = -1
-            self.lock_timer = pygame.time.get_ticks() + 2000
+            self.lock_until = pygame.time.get_ticks() + 2500
+            self.entrega_lista = None
+            
+        self.active = False
 
     def handle_input(self, event):
         if self.active and event.type == pygame.KEYDOWN:
@@ -70,6 +74,14 @@ class Cook(pygame.sprite.Sprite):
 
     def continue_execution(self, window):
         if not self.active: return
+        
+        ahora = pygame.time.get_ticks()
+        tiempo_transcurrido = ahora - self.start_time
+        
+        if tiempo_transcurrido >= self.timer_duration:
+            self.cease_execution(apply_penalty=True)
+            return
+
         self.rect.center = window.get_rect().center
         dibujo_rect = self.rect.copy()
         dibujo_rect.x += int(self.shake_offset[0])
@@ -80,17 +92,16 @@ class Cook(pygame.sprite.Sprite):
         pygame.draw.rect(window, (40, 40, 40, 220), dibujo_rect)
         pygame.draw.rect(window, (255, 255, 255), dibujo_rect, 3)
         
-        # Título
         fuente_tit = pygame.font.SysFont("Arial", 40, bold=True)
         txt_tit = fuente_tit.render(f"PREPARANDO: {self.tipo_comida.upper()}", True, (255, 215, 0))
-        window.blit(txt_tit, (dibujo_rect.centerx - txt_tit.get_width()//2, dibujo_rect.top + 50))
+        window.blit(txt_tit, (dibujo_rect.centerx - txt_tit.get_width()//2, dibujo_rect.top + 30))
 
-        # Barra Tiempo
-        progreso = max(0, (self.timer_duration - (pygame.time.get_ticks() - self.start_time)) / self.timer_duration)
-        pygame.draw.rect(window, (200, 0, 0), (dibujo_rect.left + 50, dibujo_rect.top + 110, (dibujo_rect.width-100), 10))
-        pygame.draw.rect(window, (0, 255, 0), (dibujo_rect.left + 50, dibujo_rect.top + 110, (dibujo_rect.width-100) * progreso, 10))
+        progreso = max(0, (self.timer_duration - tiempo_transcurrido) / self.timer_duration)
+        color_barra = (int(255 * (1-progreso)), int(255 * progreso), 0)
+        
+        pygame.draw.rect(window, (100, 100, 100), (dibujo_rect.left + 50, dibujo_rect.top + 90, (dibujo_rect.width-100), 15))
+        pygame.draw.rect(window, color_barra, (dibujo_rect.left + 50, dibujo_rect.top + 90, (dibujo_rect.width-100) * progreso, 15))
 
-        # Teclas
         fuente_key = pygame.font.SysFont("Arial", 60, bold=True)
         gap = dibujo_rect.width // (len(self.sequence) + 1)
         for i, k in enumerate(self.sequence):

@@ -4,10 +4,10 @@ import os
 import random
 from Powers.powers import SeleccionPowerUp
 from config.window_config import WindowConfig as wc
-from src.entities import cook as c
-from src.entities import personaje
-from src.entities.cocina import Cocina 
-from src.Enemigos.enemigo_normal import Enemigo_normal
+from entities import cook as c
+from entities import personaje
+from entities.cocina import Cocina 
+from Enemigos.enemigo_normal import Enemigo_normal
 
 # Importaciones de cinemáticas y menú
 from Cinematicas.Menu_inicio import EscenaBase, MenuInicio
@@ -45,8 +45,11 @@ class EscenaJuego(EscenaBase):
         self.ultimo_spawn = 0
         self.spawn_cooldown = 5000
         self.show_debug = False
+        
         self.dificultad_maxima = False
+        self.mensaje_dificultad_timer = 0
         self.fuente_ui = pygame.font.SysFont("Arial", 30, bold=True)
+        self.fuente_notif = pygame.font.SysFont("Arial", 24, bold=True)
 
     def _cargar_assets_escenario(self):
         imgs = []
@@ -83,27 +86,37 @@ class EscenaJuego(EscenaBase):
         return imgs
 
     def spawn_enemigo(self):
-        # Solo spawnear en la mitad inferior
+<<<<<<<<< Temporary merge branch 1
         mitad_y = wc.HEIGHT // 2
+        opciones = [(random.randint(0, wc.WIDTH), wc.HEIGHT + 50), (-50, random.randint(mitad_y, wc.HEIGHT)), (wc.WIDTH + 50, random.randint(mitad_y, wc.HEIGHT))]
+=========
+        # Solo spawnear en la mitad inferior
+        mitad_y = (wc.HEIGHT // 2)-100
         opciones = [
-            (random.randint(0, wc.WIDTH), wc.HEIGHT + 50),       # Borde inferior
-            (-50, random.randint(mitad_y, wc.HEIGHT)),          # Lateral izquierdo inferior
-            (wc.WIDTH + 50, random.randint(mitad_y, wc.HEIGHT)) # Lateral derecho inferior
+            (random.randint(0, wc.WIDTH), wc.HEIGHT + 50),
+            (-50, random.randint(mitad_y, wc.HEIGHT)),
+            (wc.WIDTH + 50, random.randint(mitad_y, wc.HEIGHT))
         ]
         x, y = random.choice(opciones)
         en = Enemigo_normal(int(x), int(y), self.animaciones_enemigo, velocidad=1)
         self.enemigos.append(en)
 
     def manejar_eventos(self, eventos):
+        ahora = pygame.time.get_ticks()
         for e in eventos:
             if e.type == pygame.QUIT: pygame.quit(); sys.exit()
             if self.menu_powerup.activo:
                 self.menu_powerup.manejar_eventos(e)
                 continue
-            if not self.cook_minigame.active and self.jugador.hitbox.colliderect(self.cocina.hitbox):
-                if e.type == pygame.KEYDOWN:
-                    if e.key == pygame.K_SPACE: self.cook_minigame.initiate_execution("Empanada", self.dificultad_maxima)
-                    elif e.key == pygame.K_f: self.cook_minigame.initiate_execution("Arepa", self.dificultad_maxima)
+            
+            if not self.cook_minigame.active and ahora >= self.cook_minigame.lock_until:
+                if self.jugador.hitbox.colliderect(self.cocina.hitbox):
+                    if e.type == pygame.KEYDOWN:
+                        if e.key == pygame.K_SPACE: 
+                            self.cook_minigame.initiate_execution("Empanada", self.dificultad_maxima)
+                        elif e.key == pygame.K_f: 
+                            self.cook_minigame.initiate_execution("Arepa", self.dificultad_maxima)
+            
             self.cook_minigame.handle_input(e)
 
     def actualizar(self, dt):
@@ -113,29 +126,25 @@ class EscenaJuego(EscenaBase):
             return
 
         t = pygame.time.get_ticks()
+        
         self.escenario.actualizar()
-
+        self.menu_powerup.actualizar()
         if t - self.ultimo_spawn > self.spawn_cooldown:
             self.spawn_enemigo()
             self.ultimo_spawn = t
-
         if not self.cook_minigame.active:
             k = pygame.key.get_pressed()
             dx = k[pygame.K_d] - k[pygame.K_a]
             dy = k[pygame.K_s] - k[pygame.K_w]
             self.jugador.movimiento(dx, dy)
-
         self.jugador.update()
         self.cocina.update()
-
-        for en in self.enemigos:
-            en.update(self.jugador)
-
-        # SUMA DE PUNTOS
+        for en in self.enemigos: en.update(self.jugador)
+        
         if self.cook_minigame.puntos_pendientes > 0:
             self.puntuacion += self.cook_minigame.puntos_pendientes
+            self.puntuacion = max(0, self.puntuacion)
             self.cook_minigame.puntos_pendientes = 0
-
             if self.puntuacion // 15 > self.ultimo_umbral_powerup:
                 self.ultimo_umbral_powerup = self.puntuacion // 15
                 self.menu_powerup.activar_menu()
@@ -149,7 +158,24 @@ class EscenaJuego(EscenaBase):
         self.cocina.dibujar(surface, self.show_debug)
         for en in self.enemigos: en.dibujar(surface, self.show_debug)
         self.jugador.dibujar(surface, self.show_debug)
-        if self.cook_minigame.active: self.cook_minigame.continue_execution(surface)
+        
+        ahora = pygame.time.get_ticks()
+        
+        if self.cook_minigame.active:
+            self.cook_minigame.continue_execution(surface)
+        elif ahora < self.cook_minigame.lock_until:
+            ms_restantes = self.cook_minigame.lock_until - ahora
+            segundos = ms_restantes / 1000.0
+            txt_bloqueo = self.fuente_notif.render(f"¡COCINA BLOQUEADA! {segundos:.1f}s", True, (255, 50, 50))
+            surface.blit(txt_bloqueo, (wc.WIDTH//2 - txt_bloqueo.get_width()//2, self.cocina.hitbox.top - 40))
+        elif self.jugador.hitbox.colliderect(self.cocina.hitbox):
+            txt_ayuda = self.fuente_notif.render("[ESPACIO] Empanada  |  [F] Arepa", True, (255, 255, 255))
+            surface.blit(txt_ayuda, (wc.WIDTH//2 - txt_ayuda.get_width()//2, self.cocina.hitbox.top - 40))
+
+        if pygame.time.get_ticks() < self.mensaje_dificultad_timer:
+            txt_dif = self.fuente_ui.render("¡DIFICULTAD AUMENTADA!", True, (255, 0, 0))
+            surface.blit(txt_dif, (wc.WIDTH//2 - txt_dif.get_width()//2, 100))
+
         p_txt = self.fuente_ui.render(f"PUNTOS: {self.puntuacion}", True, (255, 215, 0))
         surface.blit(p_txt, (20, 20))
         self.menu_powerup.dibujar(surface)
@@ -183,9 +209,12 @@ class JuegoMotor:
             if self.fading:
                 self.fade_alpha = min(255, self.fade_alpha + 15)
                 if self.fade_alpha >= 255: self._cambiar_escena()
-            else: self.fade_alpha = max(0, self.fade_alpha - 15)
+            else:
+                self.fade_alpha = max(0, self.fade_alpha - 15)
             if self.fade_alpha > 0:
-                s = pygame.Surface((wc.WIDTH, wc.HEIGHT)); s.set_alpha(self.fade_alpha); s.fill((0,0,0))
+                s = pygame.Surface((wc.WIDTH, wc.HEIGHT))
+                s.set_alpha(self.fade_alpha)
+                s.fill((0,0,0))
                 self.ventana.blit(s, (0,0))
             pygame.display.flip()
 
