@@ -34,8 +34,8 @@ class EscenaCinematica:
         pygame.event.set_blocked([pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEWHEEL])
 
         # Configuración de fuentes
-        self.fuente_nombre = fuente_nombre or pygame.font.SysFont("arial", 26, bold=True)
-        self.fuente_dialogo = fuente_dialogo or pygame.font.SysFont("arial", 28)
+        self.fuente_nombre = fuente_nombre or pygame.font.SysFont("arial", 40, bold=True)
+        self.fuente_dialogo = fuente_dialogo or pygame.font.SysFont("arial", 60)
 
         # Carga de fondo
         self.fondo = None
