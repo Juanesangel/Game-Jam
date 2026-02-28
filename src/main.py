@@ -51,6 +51,7 @@ class EscenaJuego(EscenaBase):
         self.ultimo_umbral_powerup = 0
         self.ultimo_spawn = 1
         self.spawn_cooldown = 3000
+        self.cambio_escenario_realizado = False
         
         # Estados
         self.show_debug = False
@@ -59,9 +60,9 @@ class EscenaJuego(EscenaBase):
         self.fuente_ui = pygame.font.SysFont("Arial", 30, bold=True)
         self.fuente_notif = pygame.font.SysFont("Arial", 24, bold=True)
 
-    def _cargar_assets_escenario(self):
+    def _cargar_assets_escenario(self, nombre_carpeta="transmilenio"):
         imgs = []
-        path_dir = os.path.join(self.BASE_DIR, "assets", "Images", "escenarios", "transmilenio")
+        path_dir = os.path.join(self.BASE_DIR, "assets", "Images", "escenarios", nombre_carpeta)
         if not os.path.exists(path_dir): return [pygame.Surface((wc.WIDTH, wc.HEIGHT))]
         archivos = sorted([f for f in os.listdir(path_dir) if f.endswith('.png')])
         for nombre in archivos:
@@ -137,6 +138,14 @@ class EscenaJuego(EscenaBase):
         self.escenario.actualizar()
         self.menu_powerup.actualizar()
         
+        if self.puntuacion >= 10 and not self.cambio_escenario_realizado:
+            self.pausado = True # Pausar ejecución
+            self.enemigos.clear() # Eliminar enemigos actuales
+            self.escenario.imagenes = self._cargar_assets_escenario("monserrate")
+            self.escenario.frame_index = 0
+            self.cambio_escenario_realizado = True
+            self.pausado = False # Continuar ejecución
+
         if t - self.ultimo_spawn > self.spawn_cooldown:
             mitad_y = (wc.HEIGHT // 2) - 100
             x, y = random.choice([(random.randint(0, wc.WIDTH), wc.HEIGHT+50), (-50, random.randint(mitad_y, wc.HEIGHT))])
