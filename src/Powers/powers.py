@@ -1,7 +1,6 @@
 import pygame
 import random
 from Powers.PowerUpVelocidad import PowerUpVelocidad
-from Powers.PowerUpRalentizarEnemigos import PowerUpRalentizarEnemigos
 
 
 class SeleccionPowerUp:
@@ -79,9 +78,6 @@ class SeleccionPowerUp:
 
             if isinstance(p, PowerUpVelocidad):
                 texto = f"{i+1}: Velocidad +{p.aumento_velocidad}"
-
-            elif isinstance(p, PowerUpRalentizarEnemigos):
-                texto = f"{i+1}: Ralentizar enemigos"
 
             else:
                 texto = f"{i+1}: PowerUp"

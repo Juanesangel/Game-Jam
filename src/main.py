@@ -41,8 +41,10 @@ class EscenaJuego(EscenaBase):
         self.cocina = Cocina(wc.WIDTH//2, (wc.HEIGHT//2) + 200, self._cargar_animaciones_cocina())
         self.animaciones_enemigo = self._cargar_animaciones_enemigo()
         self.cook_minigame = c.Cook()
-        self.menu_powerup = SeleccionPowerUp(self.jugador) 
+        
+        # CORRECCIÓN: Primero inicializamos la lista y luego el menú que la usa
         self.enemigos = []
+        self.menu_powerup = SeleccionPowerUp(self.jugador, self.enemigos) 
         
         # Variables de control
         self.puntuacion = 0
@@ -138,7 +140,7 @@ class EscenaJuego(EscenaBase):
         self.escenario.actualizar()
         self.menu_powerup.actualizar()
         
-        if self.puntuacion >= 30 and not self.cambio_escenario_realizado:
+        if self.puntuacion >= 10 and not self.cambio_escenario_realizado:
             self.pausado = True # Pausar ejecución
             self.enemigos.clear() # Eliminar enemigos actuales
             self.escenario.imagenes = self._cargar_assets_escenario("monserrate")
@@ -183,7 +185,7 @@ class EscenaJuego(EscenaBase):
                 self.ultimo_umbral_velocidad = self.puntuacion // 5
                 if self.velocidad_base_enemigos < 100.0:
                     self.velocidad_base_enemigos = min(100.0, self.velocidad_base_enemigos + 1)
-                    self.spawn_cooldown = max(8000, self.spawn_cooldown - 2000)
+                    self.spawn_cooldown = max(1000, self.spawn_cooldown - 600)
                     self.mensaje_dificultad_timer = t + 2500
             if self.puntuacion // 15 > self.ultimo_umbral_powerup:
                 self.ultimo_umbral_powerup = self.puntuacion // 15
