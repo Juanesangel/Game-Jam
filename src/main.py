@@ -46,11 +46,11 @@ class EscenaJuego(EscenaBase):
         
         # Variables de control
         self.puntuacion = 0
-        self.velocidad_base_enemigos = 1.0
-        self.ultimo_umbral_velocidad = 0
+        self.velocidad_base_enemigos = 3.0
+        self.ultimo_umbral_velocidad = 1
         self.ultimo_umbral_powerup = 0
-        self.ultimo_spawn = 0
-        self.spawn_cooldown = 5000
+        self.ultimo_spawn = 1
+        self.spawn_cooldown = 3000
         
         # Estados
         self.show_debug = False
@@ -115,6 +115,11 @@ class EscenaJuego(EscenaBase):
                 self.menu_powerup.manejar_eventos(e)
                 continue
             
+            if self.cook_minigame.active:
+                if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
+                    self.cook_minigame.active = False
+                    continue
+
             if not self.cook_minigame.active and ahora >= self.cook_minigame.lock_until:
                 if self.jugador.hitbox.colliderect(self.cocina.hitbox):
                     if e.type == pygame.KEYDOWN:
@@ -167,9 +172,9 @@ class EscenaJuego(EscenaBase):
             self.puntuacion = max(0, self.puntuacion)
             if self.puntuacion > 0 and self.puntuacion // 5 > self.ultimo_umbral_velocidad:
                 self.ultimo_umbral_velocidad = self.puntuacion // 5
-                if self.velocidad_base_enemigos < 10.0:
-                    self.velocidad_base_enemigos = min(4.0, self.velocidad_base_enemigos + 0.1)
-                    self.spawn_cooldown = max(800, self.spawn_cooldown - 200)
+                if self.velocidad_base_enemigos < 100.0:
+                    self.velocidad_base_enemigos = min(100.0, self.velocidad_base_enemigos + 1)
+                    self.spawn_cooldown = max(8000, self.spawn_cooldown - 2000)
                     self.mensaje_dificultad_timer = t + 2500
             if self.puntuacion // 15 > self.ultimo_umbral_powerup:
                 self.ultimo_umbral_powerup = self.puntuacion // 15
