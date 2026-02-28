@@ -8,9 +8,12 @@ from entities import cook as c
 from entities import personaje
 from entities.cocina import Cocina 
 from Enemigos.enemigo_normal import Enemigo_normal
+from Enemigos.cliente3 import Cliente3
+from Enemigos.nino import Nino
 from Cinematicas.Menu_inicio import EscenaBase, MenuInicio
 from Cinematicas.cinematica_intro import EscenaCinematica 
-from Cinematicas.pantalla_muerte import EscenaMuerte 
+from Cinematicas.pantalla_muerte import EscenaMuerte
+
 
 class Escenario:
     def __init__(self, imagenes):
@@ -35,7 +38,10 @@ class EscenaJuego(EscenaBase):
         self.escenario = Escenario(assets_fondo)
         self.jugador = personaje.Personaje(wc.WIDTH//2, wc.HEIGHT - 100, self._cargar_animaciones_jugador())
         self.cocina = Cocina(wc.WIDTH//2, (wc.HEIGHT//2) + 200, self._cargar_animaciones_cocina())
+        self.animaciones_gordo = self._cargar_animaciones_gordo()
         self.animaciones_enemigo = self._cargar_animaciones_enemigo()
+        self.animaciones_cliente3 = self._cargar_animaciones_cliente3()
+        self.animaciones_nino = self._cargar_animaciones_nino3()        
         self.cook_minigame = c.Cook()
         self.enemigos = []
         self.menu_powerup = SeleccionPowerUp(self.jugador, self.enemigos) 
@@ -88,7 +94,70 @@ class EscenaJuego(EscenaBase):
             img = pygame.image.load(path).convert_alpha()
             imgs.append(pygame.transform.scale(img, (int(img.get_width() * 0.18), int(img.get_height() * 0.18))))
         return imgs
-
+    def _cargar_animaciones_gordo(self):
+        imgs = []
+        for i in range(7):
+            path = os.path.join(
+                self.BASE_DIR,
+                "assets",
+                "Images",
+                "enemigos",
+                "Cliente 2",
+                f"cliente-{i}.png"
+            )
+            img = pygame.image.load(path).convert_alpha()
+            imgs.append(
+                pygame.transform.scale(
+                    img,
+                    (int(img.get_width() * 0.22), int(img.get_height() * 0.22))
+                )
+            )
+        return imgs
+    def _cargar_animaciones_cliente3(self):
+        imgs = []
+        for i in range(7):
+            path = os.path.join(
+                self.BASE_DIR,
+                "assets",
+                "Images",
+                "enemigos",
+                "Cliente 3",
+                f"cliente-{i}.png"
+            )
+            img = pygame.image.load(path).convert_alpha()
+            imgs.append(
+                pygame.transform.scale(
+                    img,
+                    (int(img.get_width() * 0.22), int(img.get_height() * 0.22))
+                )
+            )
+        return imgs
+    def _cargar_animaciones_nino3(self):
+        imgs = []
+        for i in range(7):
+            path = os.path.join(
+                self.BASE_DIR,
+                "assets",
+                "Images",
+                "enemigos",
+                "Nino",
+                f"Nino_-{i}.png"
+            )
+            img = pygame.image.load(path).convert_alpha()
+            imgs.append(
+                pygame.transform.scale(
+                    img,
+                    (int(img.get_width() * 0.22), int(img.get_height() * 0.22))
+                )
+            )
+        return imgs
+    def _crear_gordo(self, x, y):
+        return Enemigo_normal(
+            x,
+            y,
+            self.animaciones_gordo,
+            velocidad=self.velocidad_base_enemigos - 0.5
+        )
     def manejar_eventos(self, eventos):
         ahora = pygame.time.get_ticks()
         keys = pygame.key.get_pressed()
@@ -119,7 +188,9 @@ class EscenaJuego(EscenaBase):
                                 self.cook_minigame.initiate_execution("Arepa", self.puntuacion >= 5)
 
     def actualizar(self, dt):
-        if self.pausado or self.menu_powerup.activo: return
+        if self.pausado or self.menu_powerup.activo:
+            return
+
         t = pygame.time.get_ticks()
         self.escenario.actualizar()
         self.menu_powerup.actualizar()
@@ -142,45 +213,94 @@ class EscenaJuego(EscenaBase):
                 if self.fade_interno_alpha <= 0:
                     self.fade_interno_alpha = 0; self.fade_interno_activo = False
 
+        # ---- SPAWN DE ENEMIGOS ----
         if t - self.ultimo_spawn > self.spawn_cooldown:
+
             mitad_y = (wc.HEIGHT // 2) - 100
-            x, y = random.choice([(random.randint(0, wc.WIDTH), wc.HEIGHT+50), (-50, random.randint(mitad_y, wc.HEIGHT))])
-            self.enemigos.append(Enemigo_normal(int(x), int(y), self.animaciones_enemigo, velocidad=self.velocidad_base_enemigos))
+            x, y = random.choice([
+                (random.randint(0, wc.WIDTH), wc.HEIGHT + 50),
+                (-50, random.randint(mitad_y, wc.HEIGHT))
+            ])
+
+            r = random.random()
+
+            if r < 0.55:
+                enemigo = Enemigo_normal(
+                    int(x), int(y),
+                    self.animaciones_enemigo,
+                    velocidad=self.velocidad_base_enemigos
+                )
+
+            elif r < 0.75:
+                enemigo = Nino(
+                    int(x), int(y),
+                    self.animaciones_nino,
+                    velocidad=self.velocidad_base_enemigos - 0.1
+                )
+
+            elif r < 1:
+                enemigo = self._crear_gordo(int(x), int(y))
+
+            else:
+                enemigo = Cliente3(
+                    int(x), int(y),
+                    self.animaciones_cliente3,
+                    velocidad=self.velocidad_base_enemigos + 4
+                )
+            self.enemigos.append(enemigo)
             self.ultimo_spawn = t
-            
+
+        # ---- MOVIMIENTO JUGADOR ----
         if not self.cook_minigame.active:
             k = pygame.key.get_pressed()
-            self.jugador.movimiento(k[pygame.K_d]-k[pygame.K_a], k[pygame.K_s]-k[pygame.K_w])
-            
+            self.jugador.movimiento(
+                k[pygame.K_d] - k[pygame.K_a],
+                k[pygame.K_s] - k[pygame.K_w]
+            )
+
         self.jugador.update()
         self.cocina.update()
 
+        # ---- UPDATE ENEMIGOS ----
         for en in self.enemigos:
             en.update(self.jugador)
             if en.hitbox.colliderect(self.jugador.hitbox):
                 self.jugador.recibir_dano(10)
                 if self.jugador.vida <= 0: self.cambiar_escena("game_over")
-        
+
+        # ---- ENTREGA DE COMIDA ----
         if self.cook_minigame.entrega_lista:
             comida = self.cook_minigame.entrega_lista
-            objetivo, dist_min = None, 99999
+            objetivo, dist_min = None, float("inf")
+
             for en in self.enemigos:
                 if en.pedido == comida:
-                    d = ((en.pos_x - self.jugador.rect.centerx)**2 + (en.pos_y - self.jugador.rect.centery)**2)**0.5
-                    if d < dist_min: dist_min, objetivo = d, en
-            if objetivo: self.enemigos.remove(objetivo)
+                    d = ((en.pos_x - self.jugador.rect.centerx) ** 2 +
+                        (en.pos_y - self.jugador.rect.centery) ** 2) ** 0.5
+                    if d < dist_min:
+                        dist_min = d
+                        objetivo = en
+
+            if objetivo:
+                self.enemigos.remove(objetivo)
+
             self.cook_minigame.entrega_lista = None
 
+        # ---- SISTEMA DE PUNTUACIÓN Y DIFICULTAD ----
         if self.cook_minigame.puntos_pendientes != 0:
+
             self.puntuacion += self.cook_minigame.puntos_pendientes
-            if self.puntuacion > 0 and self.puntuacion // 3 > self.ultimo_umbral_velocidad:
-                self.ultimo_umbral_velocidad = self.puntuacion // 3
-                self.velocidad_base_enemigos += 0.5
-                self.spawn_cooldown = max(800, self.spawn_cooldown - 100)
-                self.mensaje_dificultad_timer = t + 2500
-            if self.puntuacion > 0 and self.puntuacion // 5 > self.ultimo_umbral_powerup:
-                self.ultimo_umbral_powerup = self.puntuacion // 5
+            self.puntuacion = max(0, self.puntuacion)
+            if self.puntuacion > 0 and self.puntuacion // 5 > self.ultimo_umbral_velocidad:
+                self.ultimo_umbral_velocidad = self.puntuacion // 5
+                if self.velocidad_base_enemigos < 100.0:
+                    self.velocidad_base_enemigos = min(100.0, self.velocidad_base_enemigos + 1)
+                    self.spawn_cooldown = max(1000, self.spawn_cooldown - 600)
+                    self.mensaje_dificultad_timer = t + 2500
+            if self.puntuacion // 15 > self.ultimo_umbral_powerup:
+                self.ultimo_umbral_powerup = self.puntuacion // 15
                 self.menu_powerup.activar_menu()
+
             self.cook_minigame.puntos_pendientes = 0
 
     def dibujar(self, surface):
