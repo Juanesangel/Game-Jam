@@ -13,10 +13,11 @@ class WindowConfig:
     
     # FPS
     FPS = 60 # Subí esto a 60 para que el juego vaya fluido
-    
-    # Arma
-    SCALA_ARMA = 0.1
-    COLOR_ARMA = (255, 0, 0)
+
+    SCALA_ENEMIGO=0.15
+
+
+    SCALA_COCINA=2.5
 
     @classmethod
     def initialize(cls):

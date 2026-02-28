@@ -6,7 +6,6 @@ import os
 from config.window_config import WindowConfig as wc
 from src.entities import cook as c
 from src.entities import personaje
-from src.entities import weapon
 from src.Menu_inicio import EscenaBase, MenuInicio
 
 class EscenaJuego(EscenaBase):
@@ -21,7 +20,6 @@ class EscenaJuego(EscenaBase):
 
         self.BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.jugador = personaje.Personaje(50, 50, self._cargar_animaciones())
-        self.pistola = weapon.Weapon(self._cargar_arma())
 
     def _cargar_animaciones(self):
         imgs = []
@@ -32,12 +30,6 @@ class EscenaJuego(EscenaBase):
             img = pygame.transform.scale(img, (int(w * wc.SCALA_PERSONAJE), int(h * wc.SCALA_PERSONAJE)))
             imgs.append(img)
         return imgs
-
-    def _cargar_arma(self):
-        path = os.path.join(self.BASE_DIR, "assets", "Images", "weapons", "Empanada.png")
-        img = pygame.image.load(path).convert_alpha()
-        w, h = img.get_size()
-        return pygame.transform.scale(img, (int(w * wc.SCALA_ARMA), int(h * wc.SCALA_ARMA)))
 
     def manejar_eventos(self, eventos):
         t = pygame.time.get_ticks()
@@ -68,7 +60,6 @@ class EscenaJuego(EscenaBase):
             self.jugador.movimiento(dx, dy)
         
         self.jugador.update()
-        self.pistola.update(self.jugador)
 
         # 3. Control de Tiempo del Minijuego
         if self.cook_minigame.active and t >= self.tiempo_limite:
@@ -86,7 +77,6 @@ class EscenaJuego(EscenaBase):
         t = pygame.time.get_ticks()
         surface.fill((30, 30, 30))
         self.jugador.dibujar(surface)
-        self.pistola.dibujar(surface)
 
         if self.cook_minigame.active:
             self.cook_minigame.continue_execution(surface)
