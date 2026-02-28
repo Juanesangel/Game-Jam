@@ -1,5 +1,7 @@
 import pygame
 import sys
+from cocina import Cocina
+from Enemigos.enemigo_normal import Enemigo_normal
 import os
 from config.window_config import WindowConfig as wc
 from src.entities import cook as c
