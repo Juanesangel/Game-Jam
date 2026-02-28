@@ -20,9 +20,11 @@ class Personaje:
 
         # Rect de imagen
         self.rect = self.image.get_rect(topleft=(x, y))
+        # Hitbox más pequeña y centrada
+        self.hitbox = pygame.Rect(0, 0, self.rect.width * 0.6, self.rect.height * 0.6)
+        self.hitbox.center = self.rect.center
 
-        #Hitbox más pequeña y centrada
-        self.hitbox = pygame.Rect(270, 200, self.rect.width * 0.5, self.rect.height * 0.5)
+    
 
     def movimiento(self, delta_x, delta_y):
         self.rect.x += delta_x
@@ -32,6 +34,8 @@ class Personaje:
             self.flip = True
         elif delta_x > 0:
             self.flip = False
+
+        self.actualizar_hitbox()
 
     def update(self):
         cooldown_animacion = 100
@@ -54,9 +58,14 @@ class Personaje:
     def dibujar(self, pantalla):
         imagen_flip = pygame.transform.flip(self.image, self.flip, False)
         pantalla.blit(imagen_flip, self.rect)
-        pygame.draw.rect(pantalla, (255, 0, 0), self.hitbox, 1)
+        pygame.draw.rect(pantalla, (255, 0, 0), self.hitbox, 5)
 
 
+
+    def actualizar_hitbox(self):
+        self.hitbox.width = self.rect.width * 0.6
+        self.hitbox.height = self.rect.height * 0.6
+        self.hitbox.center = self.rect.center
     def recibir_dano(self, cantidad):
 
         tiempo_actual = pygame.time.get_ticks()
@@ -65,3 +74,5 @@ class Personaje:
             self.vida -= cantidad
             self.invulnerable = True
             self.tiempo_invulnerable = tiempo_actual
+            
+            
