@@ -167,8 +167,9 @@ class EscenaJuego(EscenaBase):
             self.puntuacion = max(0, self.puntuacion)
             if self.puntuacion > 0 and self.puntuacion // 5 > self.ultimo_umbral_velocidad:
                 self.ultimo_umbral_velocidad = self.puntuacion // 5
-                if self.velocidad_base_enemigos < 4.0:
+                if self.velocidad_base_enemigos < 10.0:
                     self.velocidad_base_enemigos = min(4.0, self.velocidad_base_enemigos + 0.1)
+                    self.spawn_cooldown = max(800, self.spawn_cooldown - 200)
                     self.mensaje_dificultad_timer = t + 2500
             if self.puntuacion // 15 > self.ultimo_umbral_powerup:
                 self.ultimo_umbral_powerup = self.puntuacion // 15

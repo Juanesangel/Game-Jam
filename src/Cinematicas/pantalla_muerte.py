@@ -30,23 +30,7 @@ class EscenaMuerte:
         self.ALTO = alto
         self._musica_activa = False
 
-        # --- MANEJO SEGURO DE AUDIO (SOLUCIÓN WASAPI) ---
-        try:
-            # Intentar inicializar con parámetros estándar para evitar conflictos de frecuencia
-            if not pygame.mixer.get_init():
-                pygame.mixer.pre_init(44100, -16, 2, 512)
-                pygame.mixer.init()
-            
-            pygame.mixer.music.stop()
-            self.musica_path = "assets/Assets_Menu_inicio/Audio_Gameover.mp3"
-            pygame.mixer.music.load(self.musica_path)
-            pygame.mixer.music.set_volume(0.3)
-            pygame.mixer.music.play(-1)
-            self._musica_activa = True
-        except Exception as e:
-            # Si hay error de endpoint o WASAPI, el juego NO se cierra
-            print(f"[AUDIO SKIP] No se pudo cargar el sonido de muerte: {e}")
-            self._musica_activa = False
+        
 
         # Ocultar mouse para control por teclado
         pygame.mouse.set_visible(False)
@@ -76,26 +60,15 @@ class EscenaMuerte:
         # Botón configurado para "menu" (nombre usado en JuegoMotor)
         self.boton_menu = BotonTexto(
             "REINTENTAR", 
-            (self.ANCHO // 2, self.ALTO // 2 + 60), 
+            (self.ANCHO // 2, self.ALTO // 2 + 100), 
             self.FUENTE_UI,
-            on_click=lambda: (self._detener_musica(), self.cambiar_escena("menu"))
+            on_click=lambda: (self.cambiar_escena("menu"))
         )
 
         self.botones = [self.boton_menu]
         self.index_foco = 0
         self.tiempo_entrada = 0.0
 
-    def _detener_musica(self, con_fade=True):
-        if self._musica_activa:
-            try:
-                if con_fade:
-                    pygame.mixer.music.fadeout(500)
-                else:
-                    pygame.mixer.music.stop()
-            except:
-                pass
-            finally:
-                self._musica_activa = False
 
     def manejar_eventos(self, eventos):
         for event in eventos:
