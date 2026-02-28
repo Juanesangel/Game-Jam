@@ -72,9 +72,9 @@ class EscenaCinematica:
             {"speaker": "Abuela (Tú)", "text": "La plata ya no alcanza para nada y las ventas de empanadas han estado flojas... No sé qué vamos a comer hoy."},
             {"speaker": "Nieto", "text": "Entonces hoy no se va sola. Yo voy con usted al puesto para ayudarle con los pedidos."},
             {"speaker": "Abuela (Tú)", "text": "¡Ni lo pienses! La calle está muy dura y la gente en Bogotá mantiene con un afán terrible. Te pueden lastimar."},
-            {"speaker": "Nieto", "text": "Pero abuela, si llegan todos al tiempo se le arma un desorden. Entre los dos despachamos más rápido."},
-            {"speaker": "Abuela (Tú)", "text": "Eres muy terco, igualito a tu abuelo... Está bien, pero te me quedas cerquita. ¡Vamos a ver si hoy la suerte nos cambia!"},
-            {"speaker": "Nieto", "text": "¡Esa es la actitud! Póngase el delantal, que hoy no se nos quema ni una empanada."}
+            {"speaker": "Nieto", "text": "Pero abuela, si llegan todos al tiempo se le arma un desorden."},
+            {"speaker": "Abuela (Tú)", "text": "Eres muy terco, igualito a tu abuelo... Te vas a quedar en casa a esperar que yo llegue!, ¡Vamos a ver si hoy la suerte nos cambia!"},
+            {"speaker": "Nieto", "text": "Esta bien, abuela... Yo te esperaré en casa. Cuidate mucho abuelita, te quiero mucho!"}
         ]
 
         # Lógica de animación de texto
