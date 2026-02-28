@@ -14,7 +14,7 @@ class WindowConfig:
     # FPS
     FPS = 60 # Subí esto a 60 para que el juego vaya fluido
 
-    SCALA_ENEMIGO=0.15
+    SCALA_ENEMIGO=0.01
 
 
     SCALA_COCINA=2.5

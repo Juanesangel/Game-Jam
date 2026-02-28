@@ -39,7 +39,7 @@ class Personaje:
 
         # No pasar de la MITAD de la pantalla hacia ARRIBA
         # No salirse por el borde INFERIOR
-        limite_superior = wc.HEIGHT // 2
+        limite_superior = (wc.HEIGHT // 2)-100
         if nueva_y < limite_superior: 
             nueva_y = limite_superior
         elif nueva_y + self.rect.height > wc.HEIGHT: 
