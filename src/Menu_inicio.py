@@ -1,5 +1,3 @@
-
-
 import pygame
 import sys
 
@@ -11,7 +9,7 @@ ANCHO, ALTO = info.current_w, info.current_h
 VENTANA = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Menú de Inicio")
 CLOCK = pygame.time.Clock()
-FPS = 60
+FPS = 20
 
 # Colores
 BLANCO = (255, 255, 255)
@@ -96,7 +94,7 @@ class MenuInicio(EscenaBase):
 
         try:
             pygame.mixer.music.load("assets/Assets_Menu_inicio/Audio_menu_inicio.mp3")  
-            pygame.mixer.music.set_volume(0.6)
+            pygame.mixer.music.set_volume(0.5)
             pygame.mixer.music.play(-1)                 
         except pygame.error as e:
             print(f"[ADVERTENCIA] No se pudo cargar o reproducir la música del menú: {e}")
@@ -116,17 +114,17 @@ class MenuInicio(EscenaBase):
         self.overlay = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
         self.overlay.fill((0, 0, 0, 100)) 
 
-
+        #Botones
         ancho_boton, alto_boton = 500, 100
         x = (ANCHO - ancho_boton) // 2
         y_base = ALTO // 2 - 40
 
         self.boton_jugar = Boton(
-        "Iniciar juego",
-        (x, y_base - 40, ancho_boton, alto_boton),
-        AZUL, AZUL_HOVER,
-        on_click=lambda: self.cambiar_escena("juego"),
-        imagen_fondo=self.img_boton_base
+            "Iniciar juego",
+            (x, y_base - 40, ancho_boton, alto_boton),
+            AZUL, AZUL_HOVER,
+            on_click=lambda: self.cambiar_escena("juego"),
+            imagen_fondo=self.img_boton_base
         )
 
         self.boton_salir = Boton(
@@ -183,7 +181,7 @@ class EscenaJuego(EscenaBase):
 
         #Para que la música no suene cuando inicie el juego
         if pygame.mixer.get_init():
-            pygame.mixer.music.fadeout(600) #Fade de la canción
+            pygame.mixer.music.fadeout(600) #Fade de la canción al cambiar al juego 
 
         pygame.mouse.set_visible(True)
         pygame.event.set_allowed(None) 
