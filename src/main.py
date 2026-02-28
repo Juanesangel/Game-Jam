@@ -1,44 +1,94 @@
 import pygame
 import constantes
-from  personaje import Personaje
+from personaje import Personaje
+from weapon import Weapon
 import os
+
 pygame.init()
 pygame.display.set_caption("NOMBRE JUEGO")
 
-def escalar_img(image,scale):
-  w=image.get_width()
-  h=image.get_height()
-  nueva_imagen = pygame.transform.scale(image, (w*scale,h*scale))
-  return nueva_imagen
-from personaje import Personaje
-print("Cantidad de argumentos:", Personaje.__init__.__code__.co_argcount)
+screen = pygame.display.set_mode(
+    (constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA)
+)
 
-#importar imagenes
-#Personaje
-animaciones =[]
-for i in range (8):
-  BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-  img_path = os.path.join(BASE_DIR, "..","assets","Images","characters","Player",f"Personaje_Principal-{i}.png")
-  img = pygame.image.load(img_path)
+reloj = pygame.time.Clock()
+
+
+def escalar_img(image, scale):
+    w = image.get_width()
+    h = image.get_height()
+    return pygame.transform.scale(image, (int(w * scale), int(h * scale)))
+
+
+# -------- CARGA DE RECURSOS --------
+#PERSONAJE
+animaciones = []
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+for i in range(8):
+    img_path = os.path.join(
+        BASE_DIR,
+        "..",
+        "assets",
+        "Images",
+        "characters",
+        "Player",
+        f"Personaje_Principal-{i}.png"
+    )
+
+    img = pygame.image.load(img_path).convert_alpha()
+    img = escalar_img(img, constantes.SCALA_PERSONAJE)
+
+    animaciones.append(img)
+#ARMA
+img_path = os.path.join(BASE_DIR,"..","assets","Images","weapons","Empanada.png")
+imagen_pistola = pygame.image.load(img_path).convert_alpha()
+imagen_pistola = escalar_img(imagen_pistola, constantes.SCALA_ARMA)
+
+
+
+# -------- CREACIÓN DE OBJETOS --------
+#Juagdor
+jugador = Personaje(50, 50, animaciones)
 #Arma
-# crea el jugador de la clase jugador
-jugador = Personaje(250,250,animaciones)
-screen = pygame.display.set_mode((constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA))
-# crear un arma de la clase weapon
-#controla el frame
+pistola = Weapon(imagen_pistola)
 
-reloj =pygame.time.Clock()
+
+# -------- GAME LOOP --------
+
 run = True
-while run == True:
-  jugador.update()
-  #QUE VAYA A 60 FPS
-  reloj.tick(constantes.FPS)
-  jugador.dibujar(screen)
-  for event in pygame.event.get():
-    if event.type == pygame.QUIT:
-      run = False
-      
+while run:
+
+    reloj.tick(constantes.FPS)
+
+    # Eventos
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+
+    # Movimiento con teclado
+    keys = pygame.key.get_pressed()
+    dx = 0
+    dy = 0
+    velocidad = 5
+
+    if keys[pygame.K_a]:
+        dx = -velocidad
+    if keys[pygame.K_d]:
+        dx = velocidad
+    if keys[pygame.K_w]:
+        dy = -velocidad
+    if keys[pygame.K_s]:
+        dy = velocidad
+
+    jugador.movimiento(dx, dy)
+    jugador.update()
     
-  pygame.display.update()
+    screen.fill((30, 30, 30))
+    jugador.dibujar(screen)
+    pistola.dibujar(screen)
+
+    pygame.display.update()
 
 pygame.quit()
