@@ -31,6 +31,8 @@ class Escenario:
 
 class EscenaJuego(EscenaBase):
     def __init__(self, cambiar_escena_cb):
+
+            
         super().__init__(cambiar_escena_cb)
         self.BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         assets_fondo = self._cargar_assets_escenario()
@@ -203,7 +205,7 @@ class EscenaJuego(EscenaBase):
             overlay = pygame.Surface((wc.WIDTH, wc.HEIGHT), pygame.SRCALPHA)
             overlay.fill((0,0,0,180))
             surface.blit(overlay, (0,0))
-            txt_p = self.fuente_ui.render("PAUSA: [ESC] Continuar | [M] Menú | [Q] Salir", True, (255,255,255))
+            txt_p = self.fuente_ui.render("""PAUSA: [ESC] Continuar | [M] Menú | [Q] Salir""", True, (255,255,255))
             surface.blit(txt_p, (wc.WIDTH//2 - txt_p.get_width()//2, wc.HEIGHT//2))
         self.menu_powerup.dibujar(surface)
 
