@@ -1,7 +1,9 @@
 import pygame
 import constantes
+import math
 class Weapon():
-    def __init__(self, image):
+    def __init__(self, image, imagen_bala):
+        self.imagen_bala=imagen_bala
         self.imagen_original = image
         self.angulo = 0
         self.imagen = self.imagen_original
@@ -9,6 +11,7 @@ class Weapon():
 
     def update(self, personaje):
 
+        BALA= None
         offset_x = 30
         offset_y = 10
 
@@ -33,4 +36,32 @@ class Weapon():
     def dibujar(self, pantalla):
         pantalla.blit(self.imagen, self.rect)
         pygame.draw.rect(pantalla,constantes.COLOR_ARMA, self.rect,1)
-            
+
+    #DETECTAR EL MOVIMIENTO 
+    #if.hace e comando pedido lanza la empanada and+= False.
+        #bala=Bullet(self.imagen_bala,self.personaje.en x y y self. angle)
+        #self.dispara= True
+        #return bala
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self,image,x,y,angle):
+        pygame.sprite.Sprite.__init__(self)
+        self.imagen_original = image
+        self.angulo= angle
+        self.image=pygame.transform.rotate(self.imagen_original,self.angulo)
+        self.rect=self.image.get_rect()
+        self.rect.center=(x,y)
+        
+        self.delta_x=math.cos(math.radians(self.angulo))*constantes.VELOCIDAD_BALAS
+        self.delta_Y=-math.sin(math.radians(self.angulo))*constantes.VELOCIDAD_BALAS
+
+        self.dispara= False
+        
+    def update(self):
+        self.rect.x += self.delta_x
+        self.rect.y = self.delta_y+self.delta_y
+        
+        if self.rect.right <0 or self.rect.left > constantes.ANCHO_VENTANA or self.rect.bottom<0 or self.rect.top>constantes.ALTO_VENTANA:
+            self.kill()
+    def draw(self,screen):
+        screen.blit(self.image, (self.rect.centerx, self.rect.centerx))
+        

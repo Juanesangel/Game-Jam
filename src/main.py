@@ -45,15 +45,17 @@ for i in range(8):
 img_path = os.path.join(BASE_DIR,"..","assets","Images","weapons","Empanada.png")
 imagen_pistola = pygame.image.load(img_path).convert_alpha()
 imagen_pistola = escalar_img(imagen_pistola, constantes.SCALA_ARMA)
-
-
+#BALAS
+img_balas = os.path.join(BASE_DIR,"..","assets","Images","weapons","Empanada.png")
+imagen_balas = pygame.image.load(img_balas).convert_alpha()
+imagen_balas = escalar_img(imagen_pistola, constantes.SCALA_ARMA)
 
 # -------- CREACIÓN DE OBJETOS --------
 #Juagdor
 jugador = Personaje(50, 50, animaciones)
 #Arma
-pistola = Weapon(imagen_pistola)
-
+pistola = Weapon(imagen_pistola,imagen_balas)
+grupos_balas = pygame.sprite.Group()
 
 # -------- GAME LOOP --------
 
@@ -84,10 +86,17 @@ while run:
 
     jugador.movimiento(dx, dy)
     jugador.update()
-    pistola.update(jugador)
+    bala= pistola.update(jugador)
+    if bala:
+      grupos_balas.add(bala)
+    for bala in grupos_balas:
+      bala.update()
+    
     screen.fill((30, 30, 30))
     jugador.dibujar(screen)
     pistola.dibujar(screen)
+    for bala in grupos_balas:
+      bala.dibujar(screen)
 
     pygame.display.update()
 
