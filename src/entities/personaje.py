@@ -6,8 +6,10 @@ class Personaje:
         self.invulnerable = False
         self.tiempo_invulnerable = 0
         self.cooldown_invulnerable = 1000  # 1 segundo
-        
-        
+        self.vida_max = 100
+        self.vida = self.vida_max
+        self.velocidad = 5
+        # Animaciones y visuales
         self.animaciones = animaciones
         self.frame_index = 0
         self.update_time = pygame.time.get_ticks()
@@ -22,16 +24,29 @@ class Personaje:
         self.hitbox.center = self.rect.center
 
     def movimiento(self, delta_x, delta_y):
+<<<<<<<<< Temporary merge branch 1
+        # Actualizar posición del rect principal
         self.rect.x += delta_x
         self.rect.y += delta_y
 
+        # Orientación del sprite
+=========
+        self.rect.x += delta_x* self.velocidad
+        self.rect.y += delta_y* self.velocidad
+        self.hitbox.center = self.rect.center
+        self.actualizar_hitbox()
+>>>>>>>>> Temporary merge branch 2
         if delta_x < 0:
             self.flip = True
         elif delta_x > 0:
             self.flip = False
 
+<<<<<<<<< Temporary merge branch 1
+        # Sincronizar hitbox con la nueva posición del rect
         self.actualizar_hitbox()
 
+=========
+>>>>>>>>> Temporary merge branch 2
     def update(self):
         tiempo_actual = pygame.time.get_ticks()
         
@@ -78,4 +93,4 @@ class Personaje:
             self.invulnerable = True
             self.tiempo_invulnerable = tiempo_actual
             
-            
+>>>>>>>>> Temporary merge branch 2
