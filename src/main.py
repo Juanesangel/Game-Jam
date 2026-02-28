@@ -195,7 +195,7 @@ class EscenaJuego(EscenaBase):
         self.escenario.actualizar()
         self.menu_powerup.actualizar()
         
-        if self.puntuacion >= 10 and not self.cambio_escenario_realizado:
+        if self.puntuacion >= 5 and not self.cambio_escenario_realizado:
             self.fade_interno_activo = True
             self.paso_escenario = 1 
             
