@@ -3,8 +3,8 @@ import sys
 import os
 from src.entities import cook as c
 from config.window_config import WindowConfig as wc
-from src import personaje
-from src import weapon
+from src.entities import personaje
+from src.entities import weapon
 
 def main():
     pygame.init()
