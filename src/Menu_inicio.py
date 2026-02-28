@@ -35,35 +35,37 @@ class Boton:
         self.color_base = color_base
         self.color_hover = color_hover
         self.on_click = on_click
-        self.hover = False  # en tu menú = "en foco" por teclado
+        self.hover = False
 
-        # Imagen opcional de fondo (Surface). Si se provee, la escalamos al tamaño del rect.
         self.imagen_base = None
         if imagen_fondo is not None:
+
             # Escala suave a las dimensiones del botón
             self.imagen_base = pygame.transform.smoothscale(imagen_fondo, self.rect.size)
 
     def draw(self, surface):
         if self.imagen_base:
-            # 1) Dibuja imagen del botón
+
+            # Dibuja imagen del botón
             surface.blit(self.imagen_base, self.rect.topleft)
 
-            # 2) Si está en foco, resaltar con un "tinte" y un borde
+            # Si está en foco, resaltar con un borde
             if self.hover:
-                # Tinte claro (puedes cambiar a oscuro si te gusta más): (R,G,B,Alpha)
-                tint = pygame.Surface(self.rect.size, pygame.SRCALPHA)
-                tint.fill((255, 255, 255, 30))  # sube/baja 30 para más/menos efecto
-                surface.blit(tint, self.rect.topleft)
 
+                # Tinte claro 
+                tint = pygame.Surface(self.rect.size, pygame.SRCALPHA,)
+                tint.fill((255, 255, 255, 40))
+                surface.blit(tint, self.rect.topleft)
+            
                 # Borde de foco
-                pygame.draw.rect(surface, (255, 255, 255), self.rect, width=2, border_radius=12)
+                pygame.draw.rect(surface, (255, 255, 255), self.rect, width=3, border_radius=50)
         else:
             # Fallback a rectángulo coloreado si no hay imagen
             color = self.color_hover if self.hover else self.color_base
             pygame.draw.rect(surface, color, self.rect, border_radius=12)
             pygame.draw.rect(surface, (0, 0, 0), self.rect, width=2, border_radius=12)
 
-        # 3) Texto centrado (con una sombra sutil para legibilidad)
+        # Texto centrado (con una sombra sutil para legibilidad)
         texto_surf = FUENTE_BOTON.render(self.texto, True, BLANCO)
         texto_rect = texto_surf.get_rect(center=self.rect.center)
 
@@ -173,8 +175,8 @@ class MenuInicio(EscenaBase):
         for b in self.botones:
             b.draw(surface)
 
-
 class EscenaJuego(EscenaBase):
+
     def __init__(self, cambiar_escena_cb):
         super().__init__(cambiar_escena_cb)
         self.tiempo = 0

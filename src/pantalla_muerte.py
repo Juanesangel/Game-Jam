@@ -87,7 +87,7 @@ class EscenaMuerte:
         self.overlay = pygame.Surface((self.ANCHO, self.ALTO), pygame.SRCALPHA)
         self.overlay.fill((0, 0, 0, 160))
 
-        self.titulo_surf = self.FUENTE_TITULO.render("¡Has muerto!", True, BLANCO)
+        self.titulo_surf = self.FUENTE_TITULO.render("GAME OVER!", True, BLANCO)
         self.titulo_rect = self.titulo_surf.get_rect(center=(self.ANCHO // 2, self.ALTO // 2 - 120))
 
         opciones_y = self.ALTO // 2 + 10
@@ -97,7 +97,7 @@ class EscenaMuerte:
         "Volver al menú", 
         (self.ANCHO // 2, opciones_y + sep), 
         self.FUENTE_UI,
-        on_click=lambda: (self._detener_musica(con_fade=True), self.cambiar_escena("menu"))
+        on_click=lambda: (self._detener_musica(con_fade=True), self.cambiar_escena("Menú de Inicio"))
         )
 
         
@@ -140,20 +140,12 @@ class EscenaMuerte:
 
 
 
-
-
-
-
-
-
-
 # ---------------------------
-# PREVIEW LOCAL (solo si ejecutas este archivo directamente)
+# PREVIEW LOCAL 
 # ---------------------------
 if __name__ == "__main__":
     pygame.init()
     
-    # Puedes usar pantalla completa actual o un tamaño fijo de preview:
     info = pygame.display.Info()
     ANCHO, ALTO = info.current_w, info.current_h
     VENTANA = pygame.display.set_mode((ANCHO, ALTO))
@@ -165,14 +157,14 @@ if __name__ == "__main__":
     def dummy_cambiar_escena(nombre):
         print(f"[Preview] cambiar_escena('{nombre}')")
         
-        if nombre == "menu":
+        if nombre == "Menú de Inicio":
             pygame.quit()
             sys.exit()
 
     escena = EscenaMuerte(
         cambiar_escena_cb=dummy_cambiar_escena,
         ancho=ANCHO, alto=ALTO,
-        fondo_path="assets/Assets_Menu_inicio/Game_over.png"
+        fondo_path="assets/Assets_Menu_inicio/Game_over.jpeg"
     )
 
     while True:
