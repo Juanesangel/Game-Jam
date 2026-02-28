@@ -16,7 +16,6 @@ FPS = 60
 # Colores
 BLANCO = (255, 255, 255)
 NEGRO = (0, 0, 0)
-GRIS = (60, 60, 60)
 AZUL = (70, 140, 240)
 AZUL_HOVER = (90, 160, 255)
 ROJO = (220, 60, 60)
@@ -182,9 +181,9 @@ class EscenaJuego(EscenaBase):
         super().__init__(cambiar_escena_cb)
         self.tiempo = 0
 
-        #Para que la música no suene en el juego
+        #Para que la música no suene cuando inicie el juego
         if pygame.mixer.get_init():
-            pygame.mixer.music.fadeout(600) 
+            pygame.mixer.music.fadeout(600) #Fade de la canción
 
         pygame.mouse.set_visible(True)
         pygame.event.set_allowed(None) 
