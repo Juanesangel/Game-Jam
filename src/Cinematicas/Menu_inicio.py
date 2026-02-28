@@ -18,16 +18,9 @@ class Boton:
         self.hover = False
         
         if imagen_fondo:
-            # 1. Escalamos la imagen
             self.imagen_base = pygame.transform.smoothscale(imagen_fondo, self.rect.size)
-            
-            # 2. Creamos el brillo con la forma exacta de la imagen
-            # Generamos una superficie blanca del tamaño del botón
             self.brillo = pygame.Surface(self.rect.size, pygame.SRCALPHA)
-            self.brillo.fill((255, 255, 255, 60)) # Blanco transparente
-            
-            # 3. "Recortamos" el brillo usando la transparencia de la imagen original
-            # Esto hace que el brillo solo exista donde la imagen no es transparente
+            self.brillo.fill((255, 255, 255, 60))
             mask = pygame.mask.from_surface(self.imagen_base)
             mask_surf = mask.to_surface(setcolor=(255, 255, 255, 60), unsetcolor=(0, 0, 0, 0))
             self.brillo = mask_surf
@@ -38,10 +31,8 @@ class Boton:
         if self.imagen_base:
             surface.blit(self.imagen_base, self.rect.topleft)
             if self.hover:
-                # El brillo ahora tiene la forma exacta del taco
                 surface.blit(self.brillo, self.rect.topleft)
         else:
-            # Fallback cuadrado si no hay imagen
             pygame.draw.rect(surface, (100, 100, 100), self.rect, border_radius=12)
 
         txt = FUENTE_BOTON.render(self.texto, True, (255, 255, 255))
@@ -60,9 +51,23 @@ class MenuInicio(EscenaBase):
         info = pygame.display.Info()
         self.ancho, self.alto = info.current_w, info.current_h
         
+        # --- MÚSICA DEL MENÚ 
+        self._musica_menu_path = "assets/Assets_Menu_inicio/Audio_Menu_inicio.mp3"           
+        self._musica_activa = False                                       
+        try:                                                               
+            if not pygame.mixer.get_init():                                
+                pygame.mixer.init()                                        
+            pygame.mixer.music.load(self._musica_menu_path)              
+            pygame.mixer.music.set_volume(0.4)  # 0.0–1.0                  
+            # Reproduce en loop con un pequeño fade-in                      
+            pygame.mixer.music.play(-1, fade_ms=400)                        
+            self._musica_activa = True                                      
+        except pygame.error as e:                                           
+            print(f"[ADVERTENCIA] Música del menú no disponible: {e}")     
+        
+
         # Carga de Imágenes
         try:
-            # Cargamos la imagen una sola vez para reutilizarla en los botones
             btn_img = pygame.image.load("assets/Assets_Menu_inicio/Boton_Menu_inicio.png").convert_alpha()
             self.fondo = pygame.image.load("assets/Assets_Menu_inicio/Fondo_Menu_inicio.png").convert()
             self.fondo = pygame.transform.scale(self.fondo, (self.ancho, self.alto))
@@ -73,15 +78,34 @@ class MenuInicio(EscenaBase):
             self.fondo.fill((30, 30, 30))
 
         x = (self.ancho - 500) // 2
-        
+
+        # Callbacks que apagan la música ANTES de cambiar/ salir             # >>>
+        def _go_intro():                                                    # >>>
+            self._apagar_musica_menu(fade_ms=500)                           # >>>
+            self.cambiar_escena("introduccion")                             # >>>
+        def _salir():                                                       # >>>
+            self._apagar_musica_menu(fade_ms=400)                           # >>>
+            sys.exit()                                                      # >>>
+
         self.botones = [
             Boton("Iniciar juego", (x, self.alto//2 - 60, 500, 100), AZUL, AZUL_HOVER, 
-                  lambda: self.cambiar_escena("introduccion"), imagen_fondo=btn_img),
-            
+                  _go_intro, imagen_fondo=btn_img),                         # >>>
             Boton("Salir", (x, self.alto//2 + 80, 500, 100), ROJO, ROJO_HOVER, 
-                  lambda: sys.exit(), imagen_fondo=btn_img)
+                  _salir, imagen_fondo=btn_img)                             # >>>
         ]
         self.index = 0
+
+    # Método utilitario para apagar la música del menú                       # >>>
+    def _apagar_musica_menu(self, fade_ms=400):                             # >>>
+        if pygame.mixer.get_init() and self._musica_activa:                 # >>>
+            try:                                                            # >>>
+                if fade_ms and fade_ms > 0:                                 # >>>
+                    pygame.mixer.music.fadeout(fade_ms)                     # >>>
+                else:                                                       # >>>
+                    pygame.mixer.music.stop()                               # >>>
+            except Exception:                                               # >>>
+                pass                                                        # >>>
+            self._musica_activa = False                                     # >>>
 
     def manejar_eventos(self, eventos):
         for e in eventos:
