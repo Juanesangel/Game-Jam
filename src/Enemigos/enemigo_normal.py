@@ -3,7 +3,7 @@ import math
 import random
 
 class Enemigo_normal:
-    def __init__(self, x, y, animaciones, velocidad=1):
+    def __init__(self, x, y, animaciones, velocidad=1.0):
         self.animaciones = animaciones
         self.frame = 0.0
         self.pedido = random.choice(["Arepa", "Empanada"])
