@@ -36,7 +36,7 @@ class EscenaJuego(EscenaBase):
         # Spawn inicial del personaje en la mitad inferior
         self.jugador = personaje.Personaje(wc.WIDTH//2, wc.HEIGHT - 100, self._cargar_animaciones_jugador())
         # Cocina cerca del límite medio
-        self.cocina = Cocina(wc.WIDTH//2, (wc.HEIGHT//2) + 60, self._cargar_animaciones_cocina())
+        self.cocina = Cocina(wc.WIDTH//2, (wc.HEIGHT//2) + 200, self._cargar_animaciones_cocina())
         self.animaciones_enemigo = self._cargar_animaciones_enemigo()
         
         self.cook_minigame = c.Cook()
@@ -45,7 +45,7 @@ class EscenaJuego(EscenaBase):
         self.puntuacion = 0
         self.ultimo_umbral_powerup = 0
         self.ultimo_spawn = 0
-        self.spawn_cooldown = 2000
+        self.spawn_cooldown = 5000
         self.show_debug = False
         self.dificultad_maxima = False
         self.timer_cartel_dificultad = 0
@@ -82,19 +82,19 @@ class EscenaJuego(EscenaBase):
         for i in range(7):
             path = os.path.join(self.BASE_DIR, "assets", "Images", "enemigos", "enemigos_normales", f"cliente-{i}.png")
             img = pygame.image.load(path).convert_alpha()
-            imgs.append(pygame.transform.scale(img, (int(img.get_width() * 0.3), int(img.get_height() * 0.3))))
+            imgs.append(pygame.transform.scale(img, (int(img.get_width() * 0.18), int(img.get_height() * 0.18))))
         return imgs
 
     def spawn_enemigo(self):
         # Solo spawnear en la mitad inferior
-        mitad_y = wc.HEIGHT // 2
+        mitad_y = (wc.HEIGHT // 2)-100
         opciones = [
             (random.randint(0, wc.WIDTH), wc.HEIGHT + 50),       # Borde inferior
             (-50, random.randint(mitad_y, wc.HEIGHT)),          # Lateral izquierdo inferior
             (wc.WIDTH + 50, random.randint(mitad_y, wc.HEIGHT)) # Lateral derecho inferior
         ]
         x, y = random.choice(opciones)
-        en = Enemigo_normal(int(x), int(y), self.animaciones_enemigo, velocidad=1.5)
+        en = Enemigo_normal(int(x), int(y), self.animaciones_enemigo, velocidad=1)
         self.enemigos.append(en)
 
     def manejar_eventos(self, eventos):
