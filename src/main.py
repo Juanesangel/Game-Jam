@@ -12,6 +12,7 @@ from Enemigos.enemigo_normal import Enemigo_normal
 # Importaciones de cinemáticas y menú
 from Cinematicas.Menu_inicio import EscenaBase, MenuInicio
 from Cinematicas.cinematica_intro import EscenaCinematica 
+from Cinematicas.pantalla_muerte import EscenaMuerte 
 
 class Escenario:
     def __init__(self, imagenes):
@@ -35,18 +36,23 @@ class EscenaJuego(EscenaBase):
         assets_fondo = self._cargar_assets_escenario()
         self.escenario = Escenario(assets_fondo)
         self.jugador = personaje.Personaje(wc.WIDTH//2, wc.HEIGHT - 100, self._cargar_animaciones_jugador())
-        self.cocina = Cocina(wc.WIDTH//2, (wc.HEIGHT//2) + 160, self._cargar_animaciones_cocina())
+        self.cocina = Cocina(wc.WIDTH//2, (wc.HEIGHT//2) + 200, self._cargar_animaciones_cocina())
         self.animaciones_enemigo = self._cargar_animaciones_enemigo()
         self.cook_minigame = c.Cook()
         self.menu_powerup = SeleccionPowerUp(self.jugador) 
         self.enemigos = []
+        
+        # Variables de control
         self.puntuacion = 0
+        self.velocidad_base_enemigos = 1.0
+        self.ultimo_umbral_velocidad = 0
         self.ultimo_umbral_powerup = 0
         self.ultimo_spawn = 0
         self.spawn_cooldown = 5000
-        self.show_debug = False
         
-        self.dificultad_maxima = False
+        # Estados
+        self.show_debug = False
+        self.pausado = False
         self.mensaje_dificultad_timer = 0
         self.fuente_ui = pygame.font.SysFont("Arial", 30, bold=True)
         self.fuente_notif = pygame.font.SysFont("Arial", 24, bold=True)
@@ -85,22 +91,24 @@ class EscenaJuego(EscenaBase):
             imgs.append(pygame.transform.scale(img, (int(img.get_width() * 0.18), int(img.get_height() * 0.18))))
         return imgs
 
-    def spawn_enemigo(self):
-        # Solo spawnear en la mitad inferior
-        mitad_y = wc.HEIGHT // 2
-        opciones = [
-            (random.randint(0, wc.WIDTH), wc.HEIGHT + 50),
-            (-50, random.randint(mitad_y, wc.HEIGHT)),
-            (wc.WIDTH + 50, random.randint(mitad_y, wc.HEIGHT))
-        ]
-        x, y = random.choice(opciones)
-        en = Enemigo_normal(int(x), int(y), self.animaciones_enemigo, velocidad=1)
-        self.enemigos.append(en)
-
     def manejar_eventos(self, eventos):
         ahora = pygame.time.get_ticks()
+        keys = pygame.key.get_pressed()
         for e in eventos:
             if e.type == pygame.QUIT: pygame.quit(); sys.exit()
+            
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_F4 and (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]):
+                    self.show_debug = not self.show_debug
+                if e.key == pygame.K_ESCAPE:
+                    self.pausado = not self.pausado
+
+            if self.pausado:
+                if e.type == pygame.KEYDOWN:
+                    if e.key == pygame.K_m: self.cambiar_escena("menu")
+                    if e.key == pygame.K_q: pygame.quit(); sys.exit()
+                continue
+
             if self.menu_powerup.activo:
                 self.menu_powerup.manejar_eventos(e)
                 continue
@@ -109,107 +117,97 @@ class EscenaJuego(EscenaBase):
                 if self.jugador.hitbox.colliderect(self.cocina.hitbox):
                     if e.type == pygame.KEYDOWN:
                         if e.key == pygame.K_SPACE: 
-                            self.cook_minigame.initiate_execution("Empanada", self.dificultad_maxima)
+                            self.cook_minigame.initiate_execution("Empanada", self.puntuacion >= 30)
                         elif e.key == pygame.K_f: 
-                            self.cook_minigame.initiate_execution("Arepa", self.dificultad_maxima)
+                            self.cook_minigame.initiate_execution("Arepa", self.puntuacion >= 30)
             
             self.cook_minigame.handle_input(e)
 
     def actualizar(self, dt):
-
-        if self.menu_powerup.activo:
-            self.menu_powerup.actualizar()
-            return
-
-        t = pygame.time.get_ticks()
+        if self.pausado or self.menu_powerup.activo: return
         
+        t = pygame.time.get_ticks()
         self.escenario.actualizar()
-
-
-        # --- LÓGICA DE ELIMINACIÓN DE ENEMIGOS AL COMPLETAR COMIDA ---
-        if self.cook_minigame.entrega_lista:
-            comida_lista = self.cook_minigame.entrega_lista
-            enemigo_objetivo = None
-            distancia_minima = 999999
-
-            for en in self.enemigos:
-                if en.pedido == comida_lista:
-                    # Calcular distancia al jugador
-                    d = ((en.pos_x - self.jugador.rect.centerx)**2 + (en.pos_y - self.jugador.rect.centery)**2)**0.5
-                    if d < distancia_minima:
-                        distancia_minima = d
-                        enemigo_objetivo = en
-            
-            if enemigo_objetivo:
-                self.enemigos.remove(enemigo_objetivo)
-            
-            # Resetear la entrega para que no siga borrando en el siguiente frame
-            self.cook_minigame.entrega_lista = None
+        self.menu_powerup.actualizar()
         
         if t - self.ultimo_spawn > self.spawn_cooldown:
-            self.spawn_enemigo()
+            mitad_y = (wc.HEIGHT // 2) - 100
+            x, y = random.choice([(random.randint(0, wc.WIDTH), wc.HEIGHT+50), (-50, random.randint(mitad_y, wc.HEIGHT))])
+            self.enemigos.append(Enemigo_normal(int(x), int(y), self.animaciones_enemigo, velocidad=self.velocidad_base_enemigos))
             self.ultimo_spawn = t
             
-
         if not self.cook_minigame.active:
             k = pygame.key.get_pressed()
-            dx = k[pygame.K_d] - k[pygame.K_a]
-            dy = k[pygame.K_s] - k[pygame.K_w]
-            self.jugador.movimiento(dx, dy)
+            self.jugador.movimiento(k[pygame.K_d]-k[pygame.K_a], k[pygame.K_s]-k[pygame.K_w])
             
-
         self.jugador.update()
         self.cocina.update()
 
         for en in self.enemigos:
             en.update(self.jugador)
+            if en.hitbox.colliderect(self.jugador.hitbox):
+                self.jugador.recibir_dano(10)
+                if self.jugador.vida <= 0:
+                    self.cambiar_escena("game_over")
+        
+        if self.cook_minigame.entrega_lista:
+            comida = self.cook_minigame.entrega_lista
+            objetivo, dist_min = None, 99999
+            for en in self.enemigos:
+                if en.pedido == comida:
+                    d = ((en.pos_x - self.jugador.rect.centerx)**2 + (en.pos_y - self.jugador.rect.centery)**2)**0.5
+                    if d < dist_min: dist_min, objetivo = d, en
+            if objetivo: self.enemigos.remove(objetivo)
+            self.cook_minigame.entrega_lista = None
 
-        # SUMA DE PUNTOS
         if self.cook_minigame.puntos_pendientes != 0:
             self.puntuacion += self.cook_minigame.puntos_pendientes
             self.puntuacion = max(0, self.puntuacion)
-            self.cook_minigame.puntos_pendientes = 0
-            
-            if self.puntuacion >= 30 and not self.dificultad_maxima:
-                self.dificultad_maxima = True
-                self.mensaje_dificultad_timer = pygame.time.get_ticks() + 3000
-
-
+            if self.puntuacion > 0 and self.puntuacion // 5 > self.ultimo_umbral_velocidad:
+                self.ultimo_umbral_velocidad = self.puntuacion // 5
+                if self.velocidad_base_enemigos < 4.0:
+                    self.velocidad_base_enemigos = min(4.0, self.velocidad_base_enemigos + 0.1)
+                    self.mensaje_dificultad_timer = t + 2500
             if self.puntuacion // 15 > self.ultimo_umbral_powerup:
                 self.ultimo_umbral_powerup = self.puntuacion // 15
                 self.menu_powerup.activar_menu()
-
-        if self.jugador.vida <= 0:
-            print("GAME OVER")
+            self.cook_minigame.puntos_pendientes = 0
 
     def dibujar(self, surface):
-        pygame.draw.rect(surface, (0, 0, 255), self.jugador.rect, 2)
+        ahora = pygame.time.get_ticks()
         self.escenario.dibujar(surface)
         self.cocina.dibujar(surface, self.show_debug)
         for en in self.enemigos: en.dibujar(surface, self.show_debug)
         self.jugador.dibujar(surface, self.show_debug)
+        self.jugador.dibujar_barra_vida(surface)
         
-        ahora = pygame.time.get_ticks()
-        
+        # Anuncios de cocina y bloqueo
+        if not self.cook_minigame.active:
+            if self.jugador.hitbox.colliderect(self.cocina.hitbox):
+                if ahora < self.cook_minigame.lock_until:
+                    txt_lock = self.fuente_notif.render("COCINA BLOQUEADA", True, (255, 0, 0))
+                    surface.blit(txt_lock, (self.cocina.rect.centerx - txt_lock.get_width()//2, self.cocina.rect.top - 40))
+                else:
+                    txt_cook = self.fuente_notif.render("[SPACE] Empanada  [F] Arepa", True, (255, 255, 255))
+                    surface.blit(txt_cook, (self.cocina.rect.centerx - txt_cook.get_width()//2, self.cocina.rect.top - 40))
+
         if self.cook_minigame.active:
             self.cook_minigame.continue_execution(surface)
-        elif ahora < self.cook_minigame.lock_until:
-            ms_restantes = self.cook_minigame.lock_until - ahora
-            segundos = ms_restantes / 1000.0
-            txt_bloqueo = self.fuente_notif.render(f"¡COCINA BLOQUEADA! {segundos:.1f}s", True, (255, 50, 50))
-            surface.blit(txt_bloqueo, (wc.WIDTH//2 - txt_bloqueo.get_width()//2, self.cocina.hitbox.top - 40))
-        elif self.jugador.hitbox.colliderect(self.cocina.hitbox):
-            txt_ayuda = self.fuente_notif.render("[ESPACIO] Empanada  |  [F] Arepa", True, (255, 255, 255))
-            surface.blit(txt_ayuda, (wc.WIDTH//2 - txt_ayuda.get_width()//2, self.cocina.hitbox.top - 40))
 
+        surface.blit(self.fuente_ui.render(f"PUNTOS: {self.puntuacion}", True, (255, 215, 0)), (20, 20))
         if pygame.time.get_ticks() < self.mensaje_dificultad_timer:
-            txt_dif = self.fuente_ui.render("¡DIFICULTAD AUMENTADA!", True, (255, 0, 0))
-            surface.blit(txt_dif, (wc.WIDTH//2 - txt_dif.get_width()//2, 100))
+            txt = self.fuente_ui.render("¡DIFICULTAD AUMENTADA!", True, (255, 0, 0))
+            surface.blit(txt, (wc.WIDTH//2 - txt.get_width()//2, 120))
 
-        p_txt = self.fuente_ui.render(f"PUNTOS: {self.puntuacion}", True, (255, 215, 0))
-        surface.blit(p_txt, (20, 20))
+        if self.pausado:
+            overlay = pygame.Surface((wc.WIDTH, wc.HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0,0,0,180))
+            surface.blit(overlay, (0,0))
+            txt_p = self.fuente_ui.render("PAUSA: [ESC] Continuar | [M] Menú | [Q] Salir", True, (255,255,255))
+            surface.blit(txt_p, (wc.WIDTH//2 - txt_p.get_width()//2, wc.HEIGHT//2))
         self.menu_powerup.dibujar(surface)
-        self.jugador.dibujar_barra_vida(surface)
+
+
 
 class JuegoMotor:
     def __init__(self):
@@ -221,13 +219,23 @@ class JuegoMotor:
         self.fading, self.fade_alpha, self.proxima_escena = False, 0, ""
 
     def iniciar_fade(self, nombre):
-        self.fading, self.proxima_escena = True, nombre
+        # Cambio instantáneo para Game Over
+        if nombre == "game_over":
+            self.proxima_escena = nombre
+            self._cambiar_escena()
+        else:
+            self.fading, self.proxima_escena = True, nombre
 
     def _cambiar_escena(self):
-        if self.proxima_escena == "introduccion":
+        self.fade_alpha = 0
+        if self.proxima_escena == "menu":
+            self.escena_actual = MenuInicio(self.iniciar_fade)
+        elif self.proxima_escena == "introduccion":
             self.escena_actual = EscenaCinematica(self.iniciar_fade, wc.WIDTH, wc.HEIGHT, ruta_fondo="assets/Assets_Menu_inicio/Conversacion.jpeg")
         elif self.proxima_escena == "juego":
             self.escena_actual = EscenaJuego(self.iniciar_fade)
+        elif self.proxima_escena == "game_over":
+            self.escena_actual = EscenaMuerte(self.iniciar_fade, wc.WIDTH, wc.HEIGHT)
         self.fading = False
 
     def run(self):
@@ -243,8 +251,7 @@ class JuegoMotor:
                 self.fade_alpha = max(0, self.fade_alpha - 15)
             if self.fade_alpha > 0:
                 s = pygame.Surface((wc.WIDTH, wc.HEIGHT))
-                s.set_alpha(self.fade_alpha)
-                s.fill((0,0,0))
+                s.set_alpha(self.fade_alpha); s.fill((0,0,0))
                 self.ventana.blit(s, (0,0))
             pygame.display.flip()
 
