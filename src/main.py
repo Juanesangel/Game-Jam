@@ -35,7 +35,7 @@ class EscenaJuego(EscenaBase):
         assets_fondo = self._cargar_assets_escenario()
         self.escenario = Escenario(assets_fondo)
         self.jugador = personaje.Personaje(wc.WIDTH//2, wc.HEIGHT - 100, self._cargar_animaciones_jugador())
-        self.cocina = Cocina(wc.WIDTH//2, (wc.HEIGHT//2) + 60, self._cargar_animaciones_cocina())
+        self.cocina = Cocina(wc.WIDTH//2, (wc.HEIGHT//2) + 160, self._cargar_animaciones_cocina())
         self.animaciones_enemigo = self._cargar_animaciones_enemigo()
         self.cook_minigame = c.Cook()
         self.menu_powerup = SeleccionPowerUp(self.jugador) 
@@ -107,29 +107,44 @@ class EscenaJuego(EscenaBase):
             self.cook_minigame.handle_input(e)
 
     def actualizar(self, dt):
-        if self.menu_powerup.activo: return
+
+        if self.menu_powerup.activo:
+            self.menu_powerup.actualizar()
+            return
+
         t = pygame.time.get_ticks()
         self.escenario.actualizar()
-        self.menu_powerup.actualizar()
+
         if t - self.ultimo_spawn > self.spawn_cooldown:
             self.spawn_enemigo()
             self.ultimo_spawn = t
+
         if not self.cook_minigame.active:
             k = pygame.key.get_pressed()
-            dx, dy = (k[pygame.K_d] - k[pygame.K_a]), (k[pygame.K_s] - k[pygame.K_w])
+            dx = k[pygame.K_d] - k[pygame.K_a]
+            dy = k[pygame.K_s] - k[pygame.K_w]
             self.jugador.movimiento(dx, dy)
+
         self.jugador.update()
         self.cocina.update()
-        for en in self.enemigos: en.update(self.jugador)
-        
+
+        for en in self.enemigos:
+            en.update(self.jugador)
+
+        # SUMA DE PUNTOS
         if self.cook_minigame.puntos_pendientes > 0:
             self.puntuacion += self.cook_minigame.puntos_pendientes
             self.cook_minigame.puntos_pendientes = 0
+
             if self.puntuacion // 15 > self.ultimo_umbral_powerup:
                 self.ultimo_umbral_powerup = self.puntuacion // 15
                 self.menu_powerup.activar_menu()
 
+        if self.jugador.vida <= 0:
+            print("GAME OVER")
+
     def dibujar(self, surface):
+        pygame.draw.rect(surface, (0, 0, 255), self.jugador.rect, 2)
         self.escenario.dibujar(surface)
         self.cocina.dibujar(surface, self.show_debug)
         for en in self.enemigos: en.dibujar(surface, self.show_debug)
@@ -138,6 +153,7 @@ class EscenaJuego(EscenaBase):
         p_txt = self.fuente_ui.render(f"PUNTOS: {self.puntuacion}", True, (255, 215, 0))
         surface.blit(p_txt, (20, 20))
         self.menu_powerup.dibujar(surface)
+        self.jugador.dibujar_barra_vida(surface)
 
 class JuegoMotor:
     def __init__(self):

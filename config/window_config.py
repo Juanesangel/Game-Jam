@@ -17,7 +17,7 @@ class WindowConfig:
     SCALA_ENEMIGO=0.01
 
 
-    SCALA_COCINA=2.5
+    SCALA_COCINA=60
 
     @classmethod
     def initialize(cls):
