@@ -7,8 +7,9 @@ class Cook(pygame.sprite.Sprite):
         super().__init__()
         self.width = int(w.WindowConfig.WIDTH * 0.6)
         self.height = int(w.WindowConfig.HEIGHT * 0.4)
+        self.scale = int(w.WindowConfig.SCALA_COCINA )
         
-        self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        self.image = pygame.Surface((self.width, self.height), self.scale)
         self.image.fill((50, 50, 50, 200)) 
         self.rect = self.image.get_rect()
         
