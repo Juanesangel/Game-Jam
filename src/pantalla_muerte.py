@@ -77,7 +77,7 @@ class EscenaMuerte:
         # Carga y reproduce la pista de "muerte"
         try:
             pygame.mixer.music.load(self.musica_path)
-            pygame.mixer.music.set_volume(0.4)   # ajusta (0.0–1.0)
+            pygame.mixer.music.set_volume(0.2)   # ajusta (0.0–1.0)
             pygame.mixer.music.play(-1)          # loop infinito mientras estés en esta pantalla
             self._musica_activa = True
         except pygame.error as e:
