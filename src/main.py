@@ -224,14 +224,14 @@ class EscenaJuego(EscenaBase):
 
             r = random.random()
 
-            if r < 0.55:
+            if r < 1:
                 enemigo = Enemigo_normal(
                     int(x), int(y),
                     self.animaciones_enemigo,
                     velocidad=self.velocidad_base_enemigos
                 )
 
-            elif r < 0.75:
+            elif r < 1:
                 enemigo = Nino(
                     int(x), int(y),
                     self.animaciones_nino,
