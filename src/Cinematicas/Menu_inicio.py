@@ -63,8 +63,8 @@ class MenuInicio(EscenaBase):
         # Carga de Imágenes
         try:
             # Cargamos la imagen una sola vez para reutilizarla en los botones
-            btn_img = pygame.image.load("assets/Assets_Menu_inicio/Boton_Menu_inicio.png").convert_alpha()
-            self.fondo = pygame.image.load("assets/Assets_Menu_inicio/Fondo_Menu_inicio.png").convert()
+            btn_img = pygame.image.load("assets/Assets_Menu_inicio/Boton_menu_inicio.png").convert_alpha()
+            self.fondo = pygame.image.load("assets/Assets_Menu_inicio/Fondo_Incio.jpeg").convert()
             self.fondo = pygame.transform.scale(self.fondo, (self.ancho, self.alto))
         except Exception as e:
             print(f"Error cargando imágenes: {e}")
