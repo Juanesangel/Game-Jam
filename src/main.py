@@ -2,12 +2,15 @@ import pygame
 import sys
 import os
 import random
+from src.powers import SeleccionPowerUp
 from config.window_config import WindowConfig as wc
 from src.entities import cook as c
 from src.entities import personaje
 from src.entities.cocina import Cocina 
 from src.Enemigos.enemigo_normal import Enemigo_normal
 from src.Menu_inicio import EscenaBase, MenuInicio
+
+
 
 class Escenario:
     def __init__(self, imagenes):
@@ -28,6 +31,7 @@ class Escenario:
 class EscenaJuego(EscenaBase):
     def __init__(self, cambiar_escena_cb):
         super().__init__(cambiar_escena_cb)
+        self.ultimo_umbral_powerup = 0
         self.BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         
         self.puntuacion = 0
@@ -61,6 +65,7 @@ class EscenaJuego(EscenaBase):
             # Escalamos la imagen al tamaño total de la ventana configurada
             imgs.append(pygame.transform.scale(img, (wc.WIDTH, wc.HEIGHT)))
         return imgs
+        self.menu_powerup = SeleccionPowerUp(self.jugador)
 
     def _cargar_animaciones_jugador(self):
         imgs = []
@@ -107,7 +112,27 @@ class EscenaJuego(EscenaBase):
                         self.cook_minigame.initiate_execution("Arepa", self.dificultad_maxima)
             
             self.cook_minigame.handle_input(e)
+    
+    def manejar_eventos_powers(self, eventos):
+        t = pygame.time.get_ticks()
 
+        for e in eventos:
+            if e.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            self.cook_minigame.handle_input(e)
+
+            # PASAMOS EVENTOS AL MENU
+            if hasattr(self, "menu_powerup"):
+                self.menu_powerup.manejar_eventos(e)
+
+            if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
+                if not self.cook_minigame.active:
+                    if self.cook_minigame.initiate_execution():
+                        self.tiempo_limite = t + self.cook_minigame.get_timer()
+    
+    
     def actualizar(self, dt):
         t = pygame.time.get_ticks()
         
@@ -125,6 +150,16 @@ class EscenaJuego(EscenaBase):
             self.jugador.movimiento(dx, dy)
         
         self.jugador.update()
+
+        # 3. Control de Tiempo del Minijuego
+        if self.cook_minigame.active and t >= self.tiempo_limite:
+            self.cook_minigame.cease_execution(apply_penalty=True)
+
+        # 4. PROCESAR PUNTUACIÓN (Lógica Infalible)
+        if self.cook_minigame.puntos_pendientes != 0:
+            self.puntuacion += self.cook_minigame.puntos_pendientes
+            self.puntuacion = max(0, self.puntuacion)
+
         self.cocina.update()
         for en in self.enemigos: 
             en.update(self.jugador)
@@ -147,6 +182,24 @@ class EscenaJuego(EscenaBase):
         if self.cook_minigame.active and t > self.cook_minigame.start_time + self.cook_minigame.timer_duration:
             self.cook_minigame.cease_execution(True)
 
+            # Detectar si cruzamos múltiplos de 15
+            if self.puntuacion // 15 > self.ultimo_umbral_powerup:
+                self.ultimo_umbral_powerup = self.puntuacion // 15
+                self.menu_powerup.activar_menu()
+                    
+                # Vaciamos el buzón para que no se sume más de una vez
+                self.cook_minigame.puntos_pendientes = 0
+        self.menu_powerup.actualizar()
+
+            # Detectar si cruzamos múltiplos de 15
+            if self.puntuacion // 15 > self.ultimo_umbral_powerup:
+                self.ultimo_umbral_powerup = self.puntuacion // 15
+                self.menu_powerup.activar_menu()
+                    
+                # Vaciamos el buzón para que no se sume más de una vez
+                self.cook_minigame.puntos_pendientes = 0
+        self.menu_powerup.actualizar()
+
     def dibujar(self, surface):
         # 1. Dibujar escenario (reemplaza surface.fill)
         self.escenario.dibujar(surface)
@@ -168,6 +221,8 @@ class EscenaJuego(EscenaBase):
 
         p_txt = self.fuente_ui.render(f"PUNTOS: {self.puntuacion}", True, (255, 215, 0))
         surface.blit(p_txt, (20, 20))
+        #UI: Power ups
+        self.menu_powerup.dibujar(surface)
 
 # --- CLASE JUEGOMOTOR ---
 class JuegoMotor:
