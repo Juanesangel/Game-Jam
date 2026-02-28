@@ -7,7 +7,7 @@ class Cocina:
         self.update_time = pygame.time.get_ticks()
         self.image = self.animaciones[self.frame_index]
         self.rect = self.image.get_rect(center=(x, y))
-        self.hitbox = pygame.Rect(0, 0, self.rect.width * 0.8, self.rect.height * 0.7)
+        self.hitbox = pygame.Rect(0, 0, self.rect.width * 1.5, self.rect.height * 1.5)
         self.hitbox.center = self.rect.center
 
     def update(self):
