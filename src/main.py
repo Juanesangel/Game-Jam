@@ -1,6 +1,7 @@
 import pygame
 import sys
 from cocina import Cocina
+from powers import SeleccionPowerUp
 from Enemigos.enemigo_normal import Enemigo_normal
 import os
 from config.window_config import WindowConfig as wc
@@ -8,9 +9,11 @@ from src.entities import cook as c
 from src.entities import personaje
 from src.Menu_inicio import EscenaBase, MenuInicio
 
+
 class EscenaJuego(EscenaBase):
     def __init__(self, cambiar_escena_cb):
         super().__init__(cambiar_escena_cb)
+        self.ultimo_umbral_powerup = 0
         self.ancho, self.alto = wc.WIDTH, wc.HEIGHT
         self.cook_minigame = c.Cook()
         self.puntuacion = 0
@@ -20,6 +23,7 @@ class EscenaJuego(EscenaBase):
 
         self.BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.jugador = personaje.Personaje(50, 50, self._cargar_animaciones())
+        self.menu_powerup = SeleccionPowerUp(self.jugador)
 
     def _cargar_animaciones(self):
         imgs = []
@@ -43,7 +47,27 @@ class EscenaJuego(EscenaBase):
                 if not self.cook_minigame.active:
                     if self.cook_minigame.initiate_execution():
                         self.tiempo_limite = t + self.cook_minigame.get_timer()
+    
+    def manejar_eventos_powers(self, eventos):
+        t = pygame.time.get_ticks()
 
+        for e in eventos:
+            if e.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            self.cook_minigame.handle_input(e)
+
+            # PASAMOS EVENTOS AL MENU
+            if hasattr(self, "menu_powerup"):
+                self.menu_powerup.manejar_eventos(e)
+
+            if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
+                if not self.cook_minigame.active:
+                    if self.cook_minigame.initiate_execution():
+                        self.tiempo_limite = t + self.cook_minigame.get_timer()
+    
+    
     def actualizar(self, dt):
         t = pygame.time.get_ticks()
 
@@ -68,10 +92,18 @@ class EscenaJuego(EscenaBase):
         # 4. PROCESAR PUNTUACIÓN (Lógica Infalible)
         if self.cook_minigame.puntos_pendientes != 0:
             self.puntuacion += self.cook_minigame.puntos_pendientes
-            self.puntuacion = max(0, self.puntuacion) # Nunca menor a 0
-            
-            # Vaciamos el buzón para que no se sume más de una vez
+            self.puntuacion = max(0, self.puntuacion)
+
             self.cook_minigame.puntos_pendientes = 0
+
+            # Detectar si cruzamos múltiplos de 15
+            if self.puntuacion // 15 > self.ultimo_umbral_powerup:
+                self.ultimo_umbral_powerup = self.puntuacion // 15
+                self.menu_powerup.activar_menu()
+                    
+                # Vaciamos el buzón para que no se sume más de una vez
+                self.cook_minigame.puntos_pendientes = 0
+        self.menu_powerup.actualizar()
 
     def dibujar(self, surface):
         t = pygame.time.get_ticks()
@@ -90,6 +122,8 @@ class EscenaJuego(EscenaBase):
             restante = (self.cook_minigame.lock_timer - t) / 1000
             aviso = self.fuente_ui.render(f"RECARGANDO: {restante:.1f}s", True, (255, 80, 80))
             surface.blit(aviso, (self.ancho // 2 - aviso.get_width() // 2, 100))
+        #UI: Power ups
+        self.menu_powerup.dibujar(surface)
 
 # --- EL RESTO DE JUEGOMOTOR SE MANTIENE IGUAL ---
 class JuegoMotor:

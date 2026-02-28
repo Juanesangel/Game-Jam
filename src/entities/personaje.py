@@ -6,7 +6,7 @@ class Personaje:
         self.invulnerable = False
         self.tiempo_invulnerable = 0
         self.cooldown_invulnerable = 1000  # 1 segundo
-        
+        self.velocidad = 5
         
         self.animaciones = animaciones
         self.frame_index = 3
@@ -27,15 +27,14 @@ class Personaje:
     
 
     def movimiento(self, delta_x, delta_y):
-        self.rect.x += delta_x
-        self.rect.y += delta_y
-
+        self.rect.x += delta_x* self.velocidad
+        self.rect.y += delta_y* self.velocidad
+        self.hitbox.center = self.rect.center
+        self.actualizar_hitbox()
         if delta_x < 0:
             self.flip = True
         elif delta_x > 0:
             self.flip = False
-
-        self.actualizar_hitbox()
 
     def update(self):
         cooldown_animacion = 100
@@ -74,5 +73,4 @@ class Personaje:
             self.vida -= cantidad
             self.invulnerable = True
             self.tiempo_invulnerable = tiempo_actual
-            
             
