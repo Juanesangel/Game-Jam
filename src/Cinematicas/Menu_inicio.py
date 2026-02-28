@@ -95,17 +95,17 @@ class MenuInicio(EscenaBase):
         ]
         self.index = 0
 
-    # Método utilitario para apagar la música del menú                       # >>>
-    def _apagar_musica_menu(self, fade_ms=400):                             # >>>
-        if pygame.mixer.get_init() and self._musica_activa:                 # >>>
-            try:                                                            # >>>
-                if fade_ms and fade_ms > 0:                                 # >>>
-                    pygame.mixer.music.fadeout(fade_ms)                     # >>>
-                else:                                                       # >>>
-                    pygame.mixer.music.stop()                               # >>>
-            except Exception:                                               # >>>
-                pass                                                        # >>>
-            self._musica_activa = False                                     # >>>
+    # Método utilitario para apagar la música del menú                       
+    def _apagar_musica_menu(self, fade_ms=400):                             
+        if pygame.mixer.get_init() and self._musica_activa:                 
+            try:                                                            
+                if fade_ms and fade_ms > 0:                                 
+                    pygame.mixer.music.fadeout(fade_ms)                     
+                else:                                                       
+                    pygame.mixer.music.stop()                               
+            except Exception:                                              
+                pass                                                        
+            self._musica_activa = False                                     
 
     def manejar_eventos(self, eventos):
         for e in eventos:
