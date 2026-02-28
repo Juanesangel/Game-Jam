@@ -1,6 +1,7 @@
 import pygame
 import math
 import random
+import os
 
 class Cliente3:
     def __init__(self, x, y, animaciones, velocidad=1.5):
@@ -10,20 +11,30 @@ class Cliente3:
         self.imagen_original = self.animaciones[int(self.frame)]
         self.imagen = self.imagen_original
         
+        # --- LÓGICA DE ANIMACIÓN DE ICONOS ---
+        self.frames_icono = []
+        self.frame_icono_actual = 0.0
+        self.anim_speed_icono = 0.1
+        
+        base_path = os.path.join("assets", "Images", "iconos")
+        folder = "arepa" if self.pedido == "Arepa" else "empanada"
+        path_dir = os.path.join(base_path, folder)
+
+        if os.path.exists(path_dir):
+            archivos = sorted([f for f in os.listdir(path_dir) if f.endswith('.png')])
+            for nombre_archivo in archivos:
+                img = pygame.image.load(os.path.join(path_dir, nombre_archivo)).convert_alpha()
+                img = pygame.transform.scale(img, (35, 35))
+                self.frames_icono.append(img)
+        # -------------------------------------
+
         self.pos_x = float(x)
         self.pos_y = float(y)
-        
         self.rect = self.imagen.get_rect(center=(int(self.pos_x), int(self.pos_y)))
-        self.hitbox = pygame.Rect(
-            0, 0,
-            int(self.rect.width * 0.5),
-            int(self.rect.height * 0.5)
-        )
+        self.hitbox = pygame.Rect(0, 0, int(self.rect.width * 0.5), int(self.rect.height * 0.5))
         self.hitbox.center = self.rect.center
-
         self.velocidad = float(velocidad)
         self.angulo = 0.0
-        self.fuente_tag = pygame.font.SysFont("Arial", 20, bold=True)
 
     def update(self, jugador):
         dx = jugador.rect.centerx - self.pos_x
@@ -38,22 +49,22 @@ class Cliente3:
         self.frame = (self.frame + 0.15) % len(self.animaciones)
         self.imagen_original = self.animaciones[int(self.frame)]
         
+        # Actualizar animación del icono
+        if self.frames_icono:
+            self.frame_icono_actual = (self.frame_icono_actual + self.anim_speed_icono) % len(self.frames_icono)
+        
         self.imagen = pygame.transform.rotate(self.imagen_original, self.angulo)
         self.rect = self.imagen.get_rect(center=(int(self.pos_x), int(self.pos_y)))
         self.hitbox.center = self.rect.center
 
     def dibujar(self, pantalla, show_debug=False):
         pantalla.blit(self.imagen, self.rect)
-
-        color_texto = (255, 140, 0) if self.pedido == "Arepa" else (0, 200, 255)
-        txt_surface = self.fuente_tag.render(self.pedido, True, color_texto)
-
-        pos_texto = (
-            self.rect.centerx - txt_surface.get_width() // 2,
-            self.rect.top - 25
-        )
-
-        pantalla.blit(txt_surface, pos_texto)
+        
+        # Dibujar el icono sobre el cliente
+        if self.frames_icono:
+            img_icono = self.frames_icono[int(self.frame_icono_actual)]
+            pos_icono = (self.rect.centerx - 17, self.rect.top - 40)
+            pantalla.blit(img_icono, pos_icono)
 
         if show_debug:
-            pygame.draw.rect(pantalla, (255, 0, 0), self.hitbox, 2)
+            pygame.draw.rect(pantalla, (255, 255, 0), self.hitbox, 2)
