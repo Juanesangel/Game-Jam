@@ -42,7 +42,7 @@ def main():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
     for i in range(8):
-       img_path = os.path.join(
+        img_path = os.path.join(
         BASE_DIR,
         "..",
         "assets",
