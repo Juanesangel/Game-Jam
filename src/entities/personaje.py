@@ -10,7 +10,7 @@ class Personaje:
         self.vida_max = 100
         self.vida = self.vida_max
         self.velocidad = 5
-        
+        self.escudo = 0
         # Animaciones
         self.animaciones = animaciones
         self.frame_index = 0
@@ -90,14 +90,23 @@ class Personaje:
         self.hitbox.center = self.rect.center
 
     def recibir_dano(self, cantidad):
-        tiempo_actual = pygame.time.get_ticks()
-        if not self.invulnerable:
+        if self.invulnerable:
+            return
+
+        if self.escudo > 0:
+            if cantidad <= self.escudo:
+                self.escudo -= cantidad
+                cantidad = 0
+            else:
+                cantidad -= self.escudo
+                self.escudo = 0
+
+        if cantidad > 0:
             self.vida -= cantidad
             self.vida = max(0, self.vida)
 
-            self.invulnerable = True
-            self.tiempo_invulnerable = tiempo_actual
-    
+        self.invulnerable = True
+        self.tiempo_invulnerable = pygame.time.get_ticks()
     
     
     def dibujar_barra_vida(self, pantalla):

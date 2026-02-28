@@ -1,25 +1,35 @@
 import pygame
 import random
 from Powers.PowerUpVelocidad import PowerUpVelocidad
+from Powers.PowerUpRalentizarEnemigos import PowerUpRalentizarEnemigos
+
 
 class SeleccionPowerUp:
-    def __init__(self, personaje):
+    def __init__(self, personaje, enemigos):
         self.personaje = personaje
+        self.enemigos = enemigos
         self.activo = False
         self.opciones = []
-        self.powerups_activos = [] # Lista para manejar duraciones de los que ya se eligieron
+        self.powerups_activos = []
 
     def activar_menu(self):
         self.activo = True
         self.opciones = self.generar_opciones()
 
     def generar_opciones(self):
-        posibles_aumentos = [2, 3, 4, 5, 6]
-        opciones = []
-        valores = random.sample(posibles_aumentos, 3)
-        for valor in valores:
-            opciones.append(PowerUpVelocidad(aumento_velocidad=valor))
-        return opciones
+
+        posibles = [
+
+            lambda: PowerUpVelocidad(
+                aumento_velocidad=random.randint(2, 6)
+            ),
+
+        
+        ]
+
+        seleccionados = random.sample(posibles, 3)
+
+        return [crear() for crear in seleccionados]
 
     def manejar_eventos(self, event):
         if not self.activo:
@@ -31,11 +41,10 @@ class SeleccionPowerUp:
                 if 0 <= indice < len(self.opciones):
                     p_up = self.opciones[indice]
                     p_up.activar(self.personaje)
-                    self.powerups_activos.append(p_up) # Se va a la lista de ejecución
+                    self.powerups_activos.append(p_up)
                     self.activo = False
 
     def actualizar(self):
-        # Actualizamos solo los que están en curso
         for p in self.powerups_activos[:]:
             p.actualizar()
             if not p.activo:
@@ -45,18 +54,41 @@ class SeleccionPowerUp:
         if not self.activo:
             return
 
-        # Overlay semi-transparente para el menú
-        overlay = pygame.Surface((pantalla.get_width(), pantalla.get_height()), pygame.SRCALPHA)
+        overlay = pygame.Surface(
+            (pantalla.get_width(), pantalla.get_height()),
+            pygame.SRCALPHA
+        )
         overlay.fill((0, 0, 0, 180))
-        pantalla.blit(overlay, (0,0))
+        pantalla.blit(overlay, (0, 0))
 
         fuente = pygame.font.SysFont("Arial", 40, bold=True)
-        titulo = fuente.render("¡SELECCIONA UN POWER-UP!", True, (0, 255, 255))
-        pantalla.blit(titulo, (pantalla.get_width()//2 - titulo.get_width()//2, 100))
+
+        titulo = fuente.render(
+            "¡SELECCIONA UN POWER-UP!",
+            True,
+            (0, 255, 255)
+        )
+        pantalla.blit(
+            titulo,
+            (pantalla.get_width()//2 - titulo.get_width()//2, 100)
+        )
 
         y = 250
+
         for i, p in enumerate(self.opciones):
-            texto = f"Presiona {i+1}: Velocidad +{p.aumento_velocidad}"
+
+            if isinstance(p, PowerUpVelocidad):
+                texto = f"{i+1}: Velocidad +{p.aumento_velocidad}"
+
+            elif isinstance(p, PowerUpRalentizarEnemigos):
+                texto = f"{i+1}: Ralentizar enemigos"
+
+            else:
+                texto = f"{i+1}: PowerUp"
+
             render = fuente.render(texto, True, (255, 255, 255))
-            pantalla.blit(render, (pantalla.get_width()//2 - render.get_width()//2, y))
+            pantalla.blit(
+                render,
+                (pantalla.get_width()//2 - render.get_width()//2, y)
+            )
             y += 80
