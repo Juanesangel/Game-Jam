@@ -1,85 +1,109 @@
 import pygame
 import random
-from config import window_config as w
+import os
 
-class Cook(pygame.sprite.Sprite):
+class Cook:
     def __init__(self):
-        super().__init__()
-        self.width = int(w.WindowConfig.WIDTH * 0.6)
-        self.height = int(w.WindowConfig.HEIGHT * 0.4)
-        self.rect = pygame.Rect(0,0, self.width, self.height)
-        
         self.active = False
-        self.puntos_pendientes = 0
-        self.tipo_comida = "" 
-        self.entrega_lista = None # Variable clave para eliminar enemigos
-        
-        self.timer_duration = 5000
-        self.start_time = 0
-        self.lock_until = 0      
+        self.recipe_name = ""
         self.sequence = []
         self.current_step = 0
-        self.shake_offset: list[float] = [0.0, 0.0]
+        self.puntos_pendientes = 0
+        self.entrega_lista = None
+        self.lock_until = 0
         
-        self.arrow_keys = {pygame.K_UP: "↑", pygame.K_DOWN: "↓", pygame.K_LEFT: "←", pygame.K_RIGHT: "→"}
-        self.wasd_keys = {pygame.K_w: "W", pygame.K_a: "A", pygame.K_s: "S", pygame.K_d: "D"}
-        self.current_pool = {}
+        # Variables del Timer
+        self.timer = 0
+        self.timer_limit = 0
+        
+        self.base_path = os.path.join("assets", "Images", "flechas")
+        
+        try:
+            self.img_blanca = pygame.image.load(os.path.join(self.base_path, "flecha_blanca.png")).convert_alpha()
+            self.img_verde = pygame.image.load(os.path.join(self.base_path, "flecha_verde.png")).convert_alpha()
+            
+            self.size = (50, 50)
+            # CORRECCIÓN: Uso de transform.scale en lugar de image.scale
+            self.img_blanca = pygame.transform.scale(self.img_blanca, self.size)
+            self.img_verde = pygame.transform.scale(self.img_verde, self.size)
+        except Exception as e:
+            print(f"Error cargando flechas: {e}")
+            self.img_blanca = pygame.Surface((50, 50))
+            self.img_blanca.fill((200, 200, 200))
+            self.img_verde = pygame.Surface((50, 50))
+            self.img_verde.fill((0, 255, 0))
 
-    def initiate_execution(self, modo, dificultad_max):
-        ahora = pygame.time.get_ticks()
-        if ahora < self.lock_until: return False
-        
-        self.active, self.current_step, self.start_time = True, 0, ahora
-        self.tipo_comida, self.entrega_lista = modo, None
-        
-        self.current_pool = {**self.arrow_keys, **self.wasd_keys} if dificultad_max else (self.arrow_keys if modo == "Empanada" else self.wasd_keys)
-        self.sequence = [random.choice(list(self.current_pool.keys())) for _ in range(random.randint(3, 5))]
-        return True
+        self.rotaciones = {"RIGHT": 0, "UP": 90, "LEFT": 180, "DOWN": 270}
 
-    def cease_execution(self, apply_penalty=False):
-        if not self.active: return
-        if not apply_penalty:
-            self.puntos_pendientes = 1
-            self.entrega_lista = self.tipo_comida # Avisa qué comida se terminó
-        else:
-            self.puntos_pendientes = -1
-            self.lock_until = pygame.time.get_ticks() + 2500
-        self.active = False
+    def initiate_execution(self, name, hard_mode=False):
+        self.active = True
+        self.recipe_name = name
+        self.current_step = 0
+        self.entrega_lista = None
+        self.lock_until = 0 
+        
+        length = 5 if hard_mode else 3
+        self.sequence = [random.choice(["UP", "DOWN", "LEFT", "RIGHT"]) for _ in range(length)]
+        
+        # Timer: 4s en difícil, 6s en normal
+        self.timer_limit = 4000 if hard_mode else 6000
+        self.timer = pygame.time.get_ticks() + self.timer_limit
 
     def handle_input(self, event):
-        if self.active and event.type == pygame.KEYDOWN:
-            if event.key in self.current_pool:
-                if event.key == self.sequence[self.current_step]:
-                    self.current_step += 1
-                    if self.current_step >= len(self.sequence): self.cease_execution(False)
-                else:
-                    self.current_step = 0
-                    self.shake_offset = [random.randint(-15, 15), random.randint(-15, 15)]
+        if not self.active or event.type != pygame.KEYDOWN:
+            return
 
-    def continue_execution(self, window):
-        if not self.active: return
+        key_map = {
+            pygame.K_UP: "UP", pygame.K_DOWN: "DOWN", pygame.K_LEFT: "LEFT", pygame.K_RIGHT: "RIGHT",
+            pygame.K_w: "UP", pygame.K_s: "DOWN", pygame.K_a: "LEFT", pygame.K_d: "RIGHT"
+        }
+
+        if event.key in key_map:
+            if key_map[event.key] == self.sequence[self.current_step]:
+                self.current_step += 1
+                if self.current_step >= len(self.sequence):
+                    self.active = False
+                    self.entrega_lista = self.recipe_name
+                    self.puntos_pendientes = 1 
+                    self.lock_until = 0 # Sin bloqueo si ganas
+            else:
+                self.current_step = 0
+
+    def continue_execution(self, surface):
+        if not self.active:
+            return
+
         ahora = pygame.time.get_ticks()
-        if ahora - self.start_time >= self.timer_duration:
-            self.cease_execution(True); return
+        tiempo_restante = self.timer - ahora
 
-        self.rect.center = window.get_rect().center
-        dr = self.rect.copy()
-        dr.x += int(self.shake_offset[0]); dr.y += int(self.shake_offset[1])
-        self.shake_offset[0] *= 0.8; self.shake_offset[1] *= 0.8
+        # Si falla el timer: bloquear cocina
+        if tiempo_restante <= 0:
+            self.active = False
+            self.lock_until = ahora + 3000 # Bloqueo por error
+            return
 
-        pygame.draw.rect(window, (40, 40, 40, 220), dr)
-        pygame.draw.rect(window, (255, 255, 255), dr, 3)
-        
-        txt = pygame.font.SysFont("Arial", 40, bold=True).render(f"PREPARANDO: {self.tipo_comida.upper()}", True, (255, 215, 0))
-        window.blit(txt, (dr.centerx - txt.get_width()//2, dr.top + 30))
+        # Dibujo del interfaz del minijuego
+        overlay = pygame.Surface((surface.get_width(), 140), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))
+        surface.blit(overlay, (0, surface.get_height() // 2 - 70))
 
-        prog = max(0, (self.timer_duration - (ahora - self.start_time)) / self.timer_duration)
-        pygame.draw.rect(window, (100, 100, 100), (dr.left + 50, dr.top + 90, dr.width-100, 15))
-        pygame.draw.rect(window, (int(255*(1-prog)), int(255*prog), 0), (dr.left + 50, dr.top + 90, (dr.width-100)*prog, 15))
+        # Barra de tiempo visual
+        ancho_barra = 200
+        pct = max(0, tiempo_restante / self.timer_limit)
+        pygame.draw.rect(surface, (100, 100, 100), (surface.get_width()//2 - ancho_barra//2, surface.get_height()//2 + 45, ancho_barra, 10))
+        pygame.draw.rect(surface, (255, 0, 0), (surface.get_width()//2 - ancho_barra//2, surface.get_height()//2 + 45, int(ancho_barra * pct), 10))
 
-        f_key = pygame.font.SysFont("Arial", 60, bold=True)
-        gap = dr.width // (len(self.sequence) + 1)
-        for i, k in enumerate(self.sequence):
-            col = (0, 255, 100) if i < self.current_step else (255, 255, 255)
-            t_key = f_key.render(self.current_pool[k], True, col)
-            window.blit(t_key, (dr.left + gap*(i+1) - t_key.get_width()//2, dr.centery))
+        espaciado = 20
+        total_width = len(self.sequence) * (50 + espaciado) - espaciado
+        start_x = (surface.get_width() - total_width) // 2
+        y_pos = surface.get_height() // 2 - 25
+
+        for i, direction in enumerate(self.sequence):
+            base_img = self.img_verde if i < self.current_step else self.img_blanca
+            img_rotada = pygame.transform.rotate(base_img, self.rotaciones[direction])
+            rect_rotado = img_rotada.get_rect(center=(start_x + i * (50 + espaciado) + 25, y_pos + 25))
+            surface.blit(img_rotada, rect_rotado)
+
+        font = pygame.font.SysFont("Arial", 28, bold=True)
+        txt = font.render(f"PREPARANDO: {self.recipe_name.upper()}", True, (255, 255, 255))
+        surface.blit(txt, (surface.get_width() // 2 - txt.get_width() // 2, y_pos - 50))
