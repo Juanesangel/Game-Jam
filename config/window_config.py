@@ -1,15 +1,31 @@
 import pygame
-from enum import Enum
 
-class WindowConfig(Enum):
-    # Valores iniciales (se sobreescribirán)
+class WindowConfig:
+    # Definimos los atributos con valores por defecto (Placeholder)
     WIDTH = 0
     HEIGHT = 0
 
+    # Personaje
+    ALTO_PEROSNAJE = 50
+    ANCHO_PERSONAJE = 50
+    SCALA_PERSONAJE = 0.25
+    COLOR_PERSONAJE = (255, 255, 0)
+    
+    # FPS
+    FPS = 60 # Subí esto a 60 para que el juego vaya fluido
+    
+    # Arma
+    SCALA_ARMA = 0.1
+    COLOR_ARMA = (255, 0, 0)
+
     @classmethod
     def initialize(cls):
-        """Actualiza los valores del Enum con la resolución real del monitor"""
+        """Actualiza la resolución con la del monitor real."""
+        if not pygame.display.get_init():
+            pygame.display.init()
+            
         info = pygame.display.Info()
-        # Modificamos el atributo interno '_value_' para actualizar el Enum en ejecución
-        cls.WIDTH._value_ = info.current_w
-        cls.HEIGHT._value_ = info.current_h
+        
+        # Asignación directa (Sin .value ni ._value_)
+        cls.WIDTH = info.current_w
+        cls.HEIGHT = info.current_h

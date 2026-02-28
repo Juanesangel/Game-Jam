@@ -1,5 +1,4 @@
 import pygame
-import constantes
 
 class Personaje:
     def __init__(self, x, y, animaciones):

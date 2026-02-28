@@ -1,5 +1,6 @@
 import pygame
-import constantes
+from config import window_config as wc
+
 class Weapon():
     def __init__(self, image):
         self.imagen_original = image
@@ -32,5 +33,5 @@ class Weapon():
 
     def dibujar(self, pantalla):
         pantalla.blit(self.imagen, self.rect)
-        pygame.draw.rect(pantalla,constantes.COLOR_ARMA, self.rect,1)
+        pygame.draw.rect(pantalla,wc.WindowConfig.COLOR_ARMA, self.rect,1)
             
