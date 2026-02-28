@@ -44,7 +44,7 @@ class Nino:
         self.imagen_original = self.animaciones[int(self.frame)]
 
         # Rotación limpia
-        self.imagen = pygame.transform.rotate(self.imagen_original, self.angulo)
+        self.imagen = pygame.transform.rotate(self.imagen_original, self.angulo + 255)
 
         self.rect = self.imagen.get_rect(center=(int(self.pos_x), int(self.pos_y)))
         self.hitbox.center = self.rect.center
