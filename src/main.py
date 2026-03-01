@@ -2,7 +2,6 @@ import pygame
 import sys
 import os
 import random
-from Powers.powers import SeleccionPowerUp
 from config.window_config import WindowConfig as wc
 from entities import cook as c
 from entities import personaje
@@ -44,7 +43,6 @@ class EscenaJuego(EscenaBase):
         self.animaciones_nino = self._cargar_animaciones_nino3()        
         self.cook_minigame = c.Cook()
         self.enemigos = []
-        self.menu_powerup = SeleccionPowerUp(self.jugador, self.enemigos) 
         self.puntuacion = 0
         self.velocidad_base_enemigos = 2.0
         self.ultimo_umbral_velocidad = 0
@@ -169,7 +167,6 @@ class EscenaJuego(EscenaBase):
                 if e.key == pygame.K_ESCAPE:
                     self.pausado = not self.pausado
 
-            if self.pausado or self.menu_powerup.activo: continue
 
             if self.cook_minigame.active:
                 if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
@@ -187,13 +184,10 @@ class EscenaJuego(EscenaBase):
                             elif e.key == pygame.K_f: 
                                 self.cook_minigame.initiate_execution("Arepa", self.puntuacion >= 5)
 
-    def actualizar(self, dt):
-        if self.pausado or self.menu_powerup.activo:
-            return
+
 
         t = pygame.time.get_ticks()
         self.escenario.actualizar()
-        self.menu_powerup.actualizar()
         
         if self.puntuacion >= 5 and not self.cambio_escenario_realizado:
             self.fade_interno_activo = True
@@ -224,28 +218,28 @@ class EscenaJuego(EscenaBase):
 
             r = random.random()
 
-            if r < 1:
+            if r < 0.5:
                 enemigo = Enemigo_normal(
                     int(x), int(y),
                     self.animaciones_enemigo,
                     velocidad=self.velocidad_base_enemigos
                 )
 
-            elif r < 1:
+            elif r < 0.8:
                 enemigo = Nino(
                     int(x), int(y),
                     self.animaciones_nino,
                     velocidad=self.velocidad_base_enemigos - 0.1
                 )
 
-            elif r < 1:
+            elif r < 0.2:
                 enemigo = self._crear_gordo(int(x), int(y))
 
             else:
                 enemigo = Cliente3(
                     int(x), int(y),
                     self.animaciones_cliente3,
-                    velocidad=self.velocidad_base_enemigos + 4
+                    velocidad=self.velocidad_base_enemigos - 0.1
                 )
             self.enemigos.append(enemigo)
             self.ultimo_spawn = t
@@ -297,9 +291,8 @@ class EscenaJuego(EscenaBase):
                     self.velocidad_base_enemigos = min(100.0, self.velocidad_base_enemigos + 1)
                     self.spawn_cooldown = max(1000, self.spawn_cooldown - 600)
                     self.mensaje_dificultad_timer = t + 2500
-            if self.puntuacion // 15 > self.ultimo_umbral_powerup:
+            if self.puntuacion // 15 > 500000:
                 self.ultimo_umbral_powerup = self.puntuacion // 15
-                self.menu_powerup.activar_menu()
 
             self.cook_minigame.puntos_pendientes = 0
 
@@ -329,7 +322,6 @@ class EscenaJuego(EscenaBase):
             txt_p = self.fuente_ui.render("PAUSA", True, (255,255,255))
             surface.blit(txt_p, (wc.WIDTH//2 - txt_p.get_width()//2, wc.HEIGHT//2))
         
-        self.menu_powerup.dibujar(surface)
         if self.fade_interno_activo:
             s_fade = pygame.Surface((wc.WIDTH, wc.HEIGHT)); s_fade.set_alpha(self.fade_interno_alpha); s_fade.fill((0, 0, 0)); surface.blit(s_fade, (0, 0))
 
